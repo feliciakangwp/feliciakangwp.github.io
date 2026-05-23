@@ -584,6 +584,14 @@
       SWF Assumption for FIN
     </div>
 
+    <div class="nav-item" id="nav-swf-report" onclick="navigate('swf-report')">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+      </svg>
+      SWF Report (Revised)
+    </div>
+
     <div class="sidebar-divider"></div>
     <div class="sidebar-section-label">Coming Soon</div>
 
@@ -780,7 +788,7 @@ let originalBudgetRows = INITIAL_BUDGET_ROWS.map(r => ({ ...r, months: { ...r.mo
 let nextBudgetRowId    = 11;
 
 /* ═══ SWF ASSUMPTION DATA ═══ */
-let swfReference = { healthFluVaccine: '', weddingHamperCondolences: '', fsOfficers: '', decentralisedFund: '' };
+let swfReference = { perHeadcount: '', healthFluVaccine: '', weddingHamperCondolences: '', fsOfficers: '', decentralisedFund: '' };
 let swfVerified  = {};
 
 const SWF_ROWS = [
@@ -790,6 +798,18 @@ const SWF_ROWS = [
   { key:'swf_256997', cc:'256997', justification:'Decentralise SWF',           account:'221401', subAccount:'Q005',  basis:'Decentralise SWF',             calcType:'hc_type', param:'Preventive', refKey:'decentralisedFund',        matchKeyword:'Decentralise' },
   { key:'swf_256998', cc:'256998', justification:'Decentralise SWF',           account:'221401', subAccount:'Q005',  basis:'Decentralise SWF',             calcType:'hc_type', param:'Revenue',    refKey:'decentralisedFund',        matchKeyword:'Decentralise' },
   { key:'swf_256999', cc:'256999', justification:'Decentralise SWF',           account:'221401', subAccount:'Q005',  basis:'Decentralise SWF',             calcType:'hc_type', param:'Admin',      refKey:'decentralisedFund',        matchKeyword:'Decentralise' },
+];
+
+const SWF_REPORT_ROWS = [
+  { cc:'100119', justification:'FS officers',                account:'231401', subAccount:'Q0899', basis:'$31.66*22pax',                             matchKeyword:'FS' },
+  { cc:'100106', justification:'Birthday Vouchers',           account:'231401', subAccount:'Q0101', basis:'Projection based on AOR CHRO approved',    matchKeyword:'Birthday' },
+  { cc:'100106', justification:'Employee Wellness Programme',  account:'231401', subAccount:'Q0101', basis:'Based on $1/employee/month',               matchKeyword:'Employee Wellness' },
+  { cc:'100106', justification:'Pewter',                      account:'231401', subAccount:'Q0101', basis:'Projection based on estimation of retiree', matchKeyword:'Pewter' },
+  { cc:'100106', justification:'Wedding, Hamper, Condolences', account:'231401', subAccount:'Q0101', basis:'Based on last FY expenditure',             matchKeyword:'Wedding' },
+  { cc:'100105', justification:'Health/ Flu Vaccine',          account:'231401', subAccount:'Q0106', basis:'Based on last FY expenditure',             matchKeyword:'Health' },
+  { cc:'256997', justification:'Decentralise SWF',             account:'221401', subAccount:'Q005',  basis:'Decentralise SWF',                        matchKeyword:'Decentralise' },
+  { cc:'256998', justification:'Decentralise SWF',             account:'221401', subAccount:'Q005',  basis:'Decentralise SWF',                        matchKeyword:'Decentralise' },
+  { cc:'256999', justification:'Decentralise SWF',             account:'221401', subAccount:'Q005',  basis:'Decentralise SWF',                        matchKeyword:'Decentralise' },
 ];
 
 /* ═══ STATE ═══ */
@@ -821,6 +841,7 @@ function render() {
   else if (currentPage === "revised-budget")    renderBudgetTab(c, "revised");
   else if (currentPage === "original-budget")   renderBudgetTab(c, "original");
   else if (currentPage === "swf-assumption")    renderSwfAssumption(c);
+  else if (currentPage === "swf-report")        renderSwfReport(c);
 }
 
 /* ══════════════════════════════
@@ -1562,6 +1583,18 @@ function getHcByType() {
   return totals;
 }
 
+function getTotalHc() {
+  return db.filter(r => r.headcount).reduce((sum, r) => sum + (parseInt(headcountValues[r.code]) || 0), 0);
+}
+
+function getRevBudgetForRow(cc, keyword) {
+  const row = revisedBudgetRows.find(r =>
+    r.cc === cc && r.justification.toLowerCase().includes(keyword.toLowerCase())
+  );
+  if (!row) return 0;
+  return MONTHS.reduce((sum, m) => sum + (parseFloat(row.months[m]) || 0), 0);
+}
+
 function calcSwfAmount(row) {
   const hcByType = getHcByType();
   const refVal   = parseFloat(swfReference[row.refKey]) || 0;
@@ -1633,6 +1666,15 @@ function renderSwfAssumption(c) {
     </div>
     <div class="ref-section">
       <div class="ref-grid">
+        <div class="ref-card">
+          <label>Per Headcount</label>
+          <div class="ref-input-wrap">
+            <span class="ref-prefix">SGD</span>
+            <input type="number" class="form-input" min="0" step="0.01" placeholder="0.00"
+              value="${esc(swfReference.perHeadcount)}"
+              oninput="updateSwfRef('perHeadcount', this.value)" />
+          </div>
+        </div>
         <div class="ref-card">
           <label>Health / Flu Vaccine</label>
           <div class="ref-input-wrap">
@@ -1708,6 +1750,32 @@ function updateSwfRef(field, value) {
     if (revCell) revCell.innerHTML = fmtAmt;
     if (oriCell) oriCell.innerHTML = fmtAmt;
   });
+  refreshSwfReportTotals();
+}
+
+function refreshSwfReportTotals() {
+  const totalBudgeted  = SWF_REPORT_ROWS.reduce((sum, row) => sum + getRevBudgetForRow(row.cc, row.matchKeyword), 0);
+  const totalHc        = getTotalHc();
+  const perHc          = parseFloat(swfReference.perHeadcount) || 0;
+  const totalSwfBudget = totalHc * perHc;
+  const crcBudget      = totalSwfBudget - totalBudgeted;
+
+  const tbCell  = document.getElementById('swfr-total-budgeted');
+  const tsbCell = document.getElementById('swfr-total-swf');
+  const crcCell = document.getElementById('swfr-crc-amount');
+  const lblCell = document.getElementById('swfr-swf-label');
+
+  if (tbCell)  tbCell.innerHTML  = totalBudgeted  > 0 ? fmt(totalBudgeted)  : '<span class="zero-val">—</span>';
+  if (tsbCell) tsbCell.innerHTML = totalSwfBudget > 0 ? fmt(totalSwfBudget) : '<span class="zero-val">—</span>';
+  if (lblCell) lblCell.textContent = `(${totalHc} headcount × SGD ${swfReference.perHeadcount || '0'} per headcount)`;
+  if (crcCell) {
+    if (Math.abs(crcBudget) < 0.005) {
+      crcCell.innerHTML = '<span class="zero-val">—</span>';
+    } else {
+      const sign = crcBudget < 0 ? '-' : '';
+      crcCell.innerHTML = sign + fmt(Math.abs(crcBudget));
+    }
+  }
 }
 
 function verifySwfRow(rowKey) {
@@ -1742,6 +1810,178 @@ function verifySwfRow(rowKey) {
 
   if (revOk && oriOk) toast('Verified — pushed to Revised & Original Budget');
   else toast('Verified (no matching row found in budget tabs)');
+}
+
+/* ══════════════════════════════
+   SWF REPORT (REVISED) PAGE
+══════════════════════════════ */
+function renderSwfReport(c) {
+  if (currentRole !== 'finance' && currentRole !== 'hr') {
+    c.innerHTML = accessDenied('SWF Report (Revised)', 'Finance Representatives and HR Representatives');
+    return;
+  }
+
+  const hcByType       = getHcByType();
+  const totalHc        = getTotalHc();
+  const perHc          = parseFloat(swfReference.perHeadcount) || 0;
+  const totalBudgeted  = SWF_REPORT_ROWS.reduce((sum, row) => sum + getRevBudgetForRow(row.cc, row.matchKeyword), 0);
+  const totalSwfBudget = totalHc * perHc;
+  const crcBudget      = totalSwfBudget - totalBudgeted;
+  const crcSign        = crcBudget < 0 ? '-' : '';
+
+  function fmtCell(val) {
+    return val > 0 ? fmt(val) : '<span class="zero-val">—</span>';
+  }
+
+  const tableRows = SWF_REPORT_ROWS.map((row, idx) => {
+    const ccName = (db.find(d => d.code === row.cc) || {}).name || '';
+    const amt    = getRevBudgetForRow(row.cc, row.matchKeyword);
+    return `
+      <tr>
+        <td>
+          <div class="cc-code">${esc(row.cc)}</div>
+          <div class="cc-name">${esc(ccName)}</div>
+        </td>
+        <td>${esc(row.justification)}</td>
+        <td>${esc(row.account)}</td>
+        <td>${esc(row.subAccount)}</td>
+        <td>${esc(row.basis)}</td>
+        <td class="td-money" id="swfr-amt-${idx}" style="font-weight:600;color:var(--header)">
+          ${fmtCell(amt)}
+        </td>
+      </tr>`;
+  }).join('');
+
+  c.innerHTML = `
+    <div class="page-header-row">
+      <div><div class="page-title">SWF Report (Revised)</div><div class="accent-bar"></div></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">${hcByType.Admin}</div>
+        <div class="stat-label">Admin Headcount</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${hcByType.Preventive}</div>
+        <div class="stat-label">Preventive Headcount</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${hcByType.Revenue}</div>
+        <div class="stat-label">Revenue Headcount</div>
+      </div>
+    </div>
+
+    <div class="section-divider">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      Past / Reference Data
+    </div>
+    <div class="ref-section">
+      <div class="ref-grid">
+        <div class="ref-card">
+          <label>Per Headcount</label>
+          <div class="ref-input-wrap">
+            <span class="ref-prefix">SGD</span>
+            <input type="number" class="form-input" min="0" step="0.01" placeholder="0.00"
+              value="${esc(swfReference.perHeadcount)}"
+              oninput="updateSwfRef('perHeadcount', this.value)" />
+          </div>
+        </div>
+        <div class="ref-card">
+          <label>Health / Flu Vaccine</label>
+          <div class="ref-input-wrap">
+            <span class="ref-prefix">SGD</span>
+            <input type="number" class="form-input" min="0" step="0.01" placeholder="0.00"
+              value="${esc(swfReference.healthFluVaccine)}"
+              oninput="updateSwfRef('healthFluVaccine', this.value)" />
+          </div>
+        </div>
+        <div class="ref-card">
+          <label>Wedding, Hamper, Condolences</label>
+          <div class="ref-input-wrap">
+            <span class="ref-prefix">SGD</span>
+            <input type="number" class="form-input" min="0" step="0.01" placeholder="0.00"
+              value="${esc(swfReference.weddingHamperCondolences)}"
+              oninput="updateSwfRef('weddingHamperCondolences', this.value)" />
+          </div>
+        </div>
+        <div class="ref-card">
+          <label>FS Officers</label>
+          <div class="ref-input-wrap">
+            <span class="ref-prefix">SGD</span>
+            <input type="number" class="form-input" min="0" step="0.01" placeholder="0.00"
+              value="${esc(swfReference.fsOfficers)}"
+              oninput="updateSwfRef('fsOfficers', this.value)" />
+          </div>
+        </div>
+        <div class="ref-card">
+          <label>Decentralised Fund</label>
+          <div class="ref-input-wrap">
+            <span class="ref-prefix">SGD</span>
+            <input type="number" class="form-input" min="0" step="0.01" placeholder="0.00"
+              value="${esc(swfReference.decentralisedFund)}"
+              oninput="updateSwfRef('decentralisedFund', this.value)" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      Budget Lines
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Cost Centre</th>
+            <th>Justification of Expenditure</th>
+            <th>Account</th>
+            <th>Sub Account</th>
+            <th>Basis of Expenditure</th>
+            <th class="th-right" style="min-width:160px">Revised Budget</th>
+          </tr>
+        </thead>
+        <tbody>${tableRows}</tbody>
+        <tfoot>
+          <tr style="background:#f0f4fa;font-weight:700">
+            <td colspan="5" style="padding:10px 12px;color:var(--header)">Total Budgeted</td>
+            <td class="td-money" id="swfr-total-budgeted" style="font-weight:700;color:var(--header);padding:10px 12px">
+              ${fmtCell(totalBudgeted)}
+            </td>
+          </tr>
+          <tr style="background:#e8f0fd;font-weight:700">
+            <td colspan="5" style="padding:10px 12px;color:var(--header)">
+              Total SWF Budget
+              <span id="swfr-swf-label" style="font-weight:400;font-size:11px;color:#5570a0;margin-left:6px">
+                (${totalHc} headcount × SGD ${esc(swfReference.perHeadcount || '0')} per headcount)
+              </span>
+            </td>
+            <td class="td-money" id="swfr-total-swf" style="font-weight:700;color:var(--header);padding:10px 12px">
+              ${fmtCell(totalSwfBudget)}
+            </td>
+          </tr>
+          <tr style="background:#fff9e6;font-weight:700">
+            <td style="padding:10px 12px">
+              <div class="cc-code">256229</div>
+              <div class="cc-name">CRC</div>
+            </td>
+            <td style="padding:10px 12px;color:var(--header)">CRC</td>
+            <td style="padding:10px 12px">231401</td>
+            <td style="padding:10px 12px">Q0059</td>
+            <td style="padding:10px 12px;font-size:12px;color:#5570a0">Total SWF Budget − Total Budgeted</td>
+            <td class="td-money" id="swfr-crc-amount" style="font-weight:700;color:var(--header);padding:10px 12px">
+              ${Math.abs(crcBudget) < 0.005 ? '<span class="zero-val">—</span>' : crcSign + fmt(Math.abs(crcBudget))}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>`;
 }
 
 /* ═══ ACCESS DENIED TEMPLATE ═══ */
