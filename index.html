@@ -499,7 +499,7 @@
     </div>
   </div>
   <div class="role-pill">
-    <label>Role</label>
+    <label>Active Role</label>
     <select id="roleSelect" onchange="switchRole(this.value)">
       <option value="finance">Finance Rep</option>
       <option value="hr">HR Rep</option>
@@ -769,14 +769,10 @@ function renderCostCentre(c) {
           ${TYPES.map(t => `<option${t===r.type?" selected":""}>${esc(t)}</option>`).join("")}
         </select>
       </td>
-      <td>
-        <div class="hc-wrap">
-          <input type="checkbox" ${r.headcount?"checked":""}
-            onchange="updateCCRow(${i},'headcount',this.checked)" />
-          <span class="badge ${r.headcount?'badge-yes':'badge-no'}" id="hcbadge-${i}">
-            ${r.headcount?"Yes":"No"}
-          </span>
-        </div>
+      <td class="td-center">
+        <input type="checkbox" ${r.headcount?"checked":""}
+          onchange="updateCCRow(${i},'headcount',this.checked)"
+          style="width:17px;height:17px;accent-color:var(--accent);cursor:pointer;" />
       </td>
     </tr>`).join("");
 
