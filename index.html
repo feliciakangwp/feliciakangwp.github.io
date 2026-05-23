@@ -4,984 +4,1322 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Central Budgeting Fund</title>
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: #FFFFFF; color: #2F3A4A; min-height: 100vh; }
+    :root {
+      --bg:      #FFFFFF;
+      --header:  #001B5E;
+      --accent:  #0087E6;
+      --metric:  #F2C94C;
+      --body:    #2F3A4A;
+      --divider: #001B5E;
+    }
 
-    .app-wrapper { display: flex; min-height: 100vh; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Sidebar */
-    .sidebar { width: 220px; background: #001B5E; display: flex; flex-direction: column; flex-shrink: 0; }
-    .sidebar-logo { padding: 24px 20px 16px; border-bottom: 2px solid #0087E6; }
-    .sidebar-logo h2 { color: #FFFFFF; font-size: 13px; font-weight: 700; line-height: 1.4; letter-spacing: 0.5px; text-transform: uppercase; }
-    .sidebar-logo span { color: #F2C94C; font-size: 11px; display: block; margin-top: 2px; }
-    .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
-    .nav-section-label { color: #0087E6; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; padding: 12px 20px 4px; }
-    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; cursor: pointer; color: #FFFFFF; font-size: 13px; transition: background 0.15s; border-left: 3px solid transparent; }
-    .nav-item:hover { background: rgba(0,135,230,0.15); }
-    .nav-item.active { background: rgba(0,135,230,0.25); border-left-color: #0087E6; color: #FFFFFF; font-weight: 600; }
-    .nav-item .nav-icon { width: 18px; text-align: center; font-size: 15px; flex-shrink: 0; }
-    .nav-item .nav-label { flex: 1; }
-    .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
-    .role-badge { background: rgba(242,201,76,0.15); border: 1px solid #F2C94C; border-radius: 4px; padding: 6px 10px; }
-    .role-badge label { color: #F2C94C; font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; display: block; margin-bottom: 4px; }
-    .role-badge select { background: transparent; border: none; color: #FFFFFF; font-size: 12px; width: 100%; cursor: pointer; outline: none; }
-    .role-badge select option { background: #001B5E; color: #FFFFFF; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--body);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
 
-    /* Main content */
-    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .top-bar { background: #001B5E; padding: 0 28px; height: 56px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0087E6; }
-    .top-bar h1 { color: #FFFFFF; font-size: 17px; font-weight: 700; letter-spacing: 0.3px; }
-    .top-bar .breadcrumb { color: rgba(255,255,255,0.55); font-size: 12px; }
-    .top-bar .user-info { display: flex; align-items: center; gap: 8px; color: #FFFFFF; font-size: 13px; }
-    .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: #F2C94C; color: #001B5E; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
-    .page-area { flex: 1; padding: 28px; overflow-y: auto; background: #f4f6f9; }
+    /* ── Top Header ── */
+    .top-header {
+      background: var(--header);
+      color: #fff;
+      height: 62px;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 3px solid var(--accent);
+      flex-shrink: 0;
+    }
 
-    /* Section divider */
-    .section-divider { background: #001B5E; color: #FFFFFF; padding: 8px 16px; font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: space-between; }
+    .header-brand { display: flex; align-items: center; gap: 12px; }
 
-    /* Card */
-    .card { background: #FFFFFF; border-radius: 0 0 6px 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .card-header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e8ecf0; }
-    .card-header-left { display: flex; align-items: center; gap: 12px; }
-    .record-count { background: #f0f4ff; color: #001B5E; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 12px; border: 1px solid #cdd8f0; }
+    .header-icon {
+      background: var(--accent);
+      width: 34px; height: 34px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+    }
 
-    /* Buttons */
-    .btn { padding: 9px 18px; border-radius: 5px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-primary { background: #001B5E; color: #FFFFFF; }
-    .btn-primary:hover { background: #002d9a; }
-    .btn-accent { background: #0087E6; color: #FFFFFF; }
-    .btn-accent:hover { background: #006bbf; }
-    .btn-outline { background: transparent; color: #001B5E; border: 1.5px solid #001B5E; }
-    .btn-outline:hover { background: #f0f4ff; }
-    .btn-danger { background: #dc3545; color: #FFFFFF; }
-    .btn-danger:hover { background: #b02a37; }
-    .btn-sm { padding: 5px 12px; font-size: 12px; }
-    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .header-title { font-size: 18px; font-weight: 700; letter-spacing: 0.4px; }
 
-    /* Table */
-    .table-wrapper { overflow-x: auto; }
+    .header-sub {
+      font-size: 11px;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    .role-pill {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 8px;
+      padding: 6px 14px;
+    }
+
+    .role-pill label { font-size: 11px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .role-pill select {
+      background: transparent; border: none;
+      color: #fff; font-size: 13px; font-weight: 600;
+      cursor: pointer; outline: none;
+    }
+
+    .role-pill select option { background: var(--header); }
+
+    /* ── Layout ── */
+    .layout { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 220px;
+      background: var(--header);
+      display: flex; flex-direction: column;
+      padding: 20px 0 0;
+      flex-shrink: 0;
+    }
+
+    .sidebar-section-label {
+      font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      padding: 0 18px 8px;
+    }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 13px 18px;
+      color: rgba(255,255,255,0.6);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.18s;
+      user-select: none;
+      line-height: 1.3;
+    }
+
+    .nav-item svg { flex-shrink: 0; }
+
+    .nav-item:hover:not(.locked) { background: rgba(255,255,255,0.07); color: #fff; }
+
+    .nav-item.active {
+      background: rgba(0,135,230,0.18);
+      color: #fff;
+      border-left-color: var(--accent);
+    }
+
+    .nav-item.locked { opacity: 0.35; cursor: not-allowed; }
+
+    .sidebar-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 12px 18px; }
+
+    /* ── Content ── */
+    .content { flex: 1; overflow-y: auto; padding: 30px 36px; background: #f5f7fb; }
+
+    /* ── Page header ── */
+    .page-header-row {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 22px;
+    }
+
+    .page-title { font-size: 22px; font-weight: 700; color: var(--header); }
+
+    .accent-bar { height: 3px; width: 52px; background: var(--accent); border-radius: 2px; margin-top: 5px; }
+
+    /* ── Stat cards ── */
+    .stats-row { display: flex; gap: 14px; margin-bottom: 26px; flex-wrap: wrap; }
+
+    .stat-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid var(--metric);
+      border-radius: 7px;
+      padding: 14px 20px;
+      min-width: 140px;
+    }
+
+    .stat-value { font-size: 26px; font-weight: 700; color: var(--header); line-height: 1; }
+    .stat-label { font-size: 11px; color: #8a95a3; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+    /* ── Section divider ── */
+    .section-divider {
+      background: var(--divider);
+      color: #fff;
+      padding: 10px 18px;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.8px;
+      text-transform: uppercase;
+      border-radius: 6px 6px 0 0;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ── Table ── */
+    .table-wrap {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-top: none;
+      border-radius: 0 0 7px 7px;
+      overflow: hidden;
+    }
+
     table { width: 100%; border-collapse: collapse; }
-    thead tr { background: #f8f9fb; }
-    th { text-align: left; padding: 11px 16px; font-size: 12px; font-weight: 700; color: #001B5E; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 2px solid #0087E6; white-space: nowrap; }
-    td { padding: 12px 16px; font-size: 13px; color: #2F3A4A; border-bottom: 1px solid #edf0f4; }
-    tr:hover td { background: #f5f8ff; }
-    tr:last-child td { border-bottom: none; }
-    .col-cc { font-weight: 700; color: #001B5E; font-family: monospace; font-size: 13px; }
 
-    /* Sticky column for wide tables */
-    .sticky-col { position: sticky; left: 0; z-index: 1; }
-    thead th.sticky-col { background: #f8f9fb; z-index: 2; }
-    tbody td.sticky-col { background: #FFFFFF; box-shadow: 2px 0 4px rgba(0,0,0,0.06); }
-    tbody tr:hover td.sticky-col { background: #f5f8ff; }
+    thead tr { background: #eef2fa; }
 
-    /* Total row */
-    .total-row td { background: #eef3ff !important; font-weight: 700; color: #001B5E; border-top: 2px solid #0087E6; }
-    tbody .total-row:hover td { background: #e4ecff !important; }
-    .total-row td.sticky-col { background: #eef3ff !important; }
+    th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 11px; font-weight: 700; color: var(--header);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 2px solid var(--accent);
+      white-space: nowrap;
+    }
 
-    /* Badges */
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
-    .badge-admin { background: #e8f4fd; color: #0087E6; border: 1px solid #b3d9f7; }
-    .badge-revenue { background: #fff8e6; color: #b8860b; border: 1px solid #f2c94c; }
-    .badge-preventive { background: #edfaf3; color: #1a7a45; border: 1px solid #a3dfc0; }
-    .badge-yes { background: #edfaf3; color: #1a7a45; border: 1px solid #a3dfc0; font-size: 11px; padding: 3px 8px; border-radius: 10px; }
-    .badge-no { background: #fef0f0; color: #c0392b; border: 1px solid #f5b7b1; font-size: 11px; padding: 3px 8px; border-radius: 10px; }
-    .nav-badge { font-size: 9px; padding: 2px 5px; border-radius: 3px; font-weight: 700; letter-spacing: 0.3px; flex-shrink: 0; }
+    th.th-center, td.td-center { text-align: center; }
+    th.th-right,  td.td-right  { text-align: right; }
 
-    /* Action buttons in table */
-    .action-btns { display: flex; gap: 6px; }
+    td {
+      padding: 11px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid #f0f2f7;
+      color: var(--body);
+      vertical-align: middle;
+    }
 
-    /* Access denied */
-    .access-denied { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 64px 32px; text-align: center; gap: 12px; }
-    .access-denied .lock-icon { font-size: 48px; opacity: 0.3; }
-    .access-denied h3 { color: #001B5E; font-size: 18px; }
-    .access-denied p { color: #6b7a8d; font-size: 14px; max-width: 300px; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #f8f9ff; }
 
-    /* Modal */
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .modal { background: #FFFFFF; border-radius: 8px; width: 100%; max-width: 520px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); overflow: hidden; }
-    .modal-header { background: #001B5E; padding: 16px 22px; display: flex; align-items: center; justify-content: space-between; }
-    .modal-header h3 { color: #FFFFFF; font-size: 15px; font-weight: 700; }
-    .modal-header .accent-line { width: 36px; height: 3px; background: #0087E6; border-radius: 2px; margin-top: 4px; }
-    .modal-close { color: rgba(255,255,255,0.7); cursor: pointer; font-size: 20px; background: none; border: none; line-height: 1; transition: color 0.15s; }
-    .modal-close:hover { color: #FFFFFF; }
-    .modal-body { padding: 24px 22px; }
-    .modal-footer { padding: 14px 22px; border-top: 1px solid #edf0f4; display: flex; justify-content: flex-end; gap: 10px; background: #fafbfd; }
+    .cc-code { font-weight: 700; color: var(--header); font-size: 13px; }
+    .cc-name { font-size: 11px; color: #8a95a3; margin-top: 2px; }
 
-    /* Form */
+    /* ── Inline selects & inputs ── */
+    .tbl-select, .tbl-input {
+      padding: 5px 10px;
+      border: 1px solid #d1dae6;
+      border-radius: 5px;
+      font-size: 13px;
+      color: var(--body);
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .tbl-input { cursor: text; }
+
+    .tbl-input.num { width: 100px; text-align: right; }
+
+    .tbl-select:focus, .tbl-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,135,230,0.12);
+    }
+
+    .tbl-input.wide { width: 100%; }
+
+    /* ── Headcount checkbox column ── */
+    .hc-wrap { display: flex; align-items: center; gap: 9px; }
+    .hc-wrap input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+
+    /* ── Badges ── */
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-yes { background: #e6f4ea; color: #1b7735; }
+    .badge-no  { background: #fce8e6; color: #b71c1c; }
+
+    /* ── Row number ── */
+    .row-num { font-size: 11px; color: #aab; font-weight: 600; }
+
+    /* ── Action buttons ── */
+    .btn-icon {
+      background: none; border: none; cursor: pointer;
+      width: 30px; height: 30px; border-radius: 5px;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+      color: #8a95a3;
+    }
+
+    .btn-icon:hover { background: #fce8e6; color: #c62828; }
+
+    .actions-cell { display: flex; gap: 4px; align-items: center; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: #aab;
+    }
+
+    .empty-state p { font-size: 13px; margin-top: 8px; }
+
+    /* ── Info callout ── */
+    .info-callout {
+      background: #eef6ff;
+      border: 1px solid #b8d9f8;
+      border-left: 4px solid var(--accent);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #1a5276;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    /* ── Primary button ── */
+    .btn-primary {
+      background: var(--header); color: #fff; border: none;
+      padding: 10px 18px; border-radius: 6px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: 7px;
+      transition: background 0.18s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover { background: var(--accent); }
+    .btn-primary:active { transform: scale(0.97); }
+
+    /* ── Access denied ── */
+    .access-denied {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 80px 24px;
+      text-align: center;
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .access-denied svg { margin-bottom: 16px; }
+    .access-denied h3 { font-size: 17px; color: #555; margin-bottom: 6px; }
+    .access-denied p  { font-size: 13px; color: #999; max-width: 340px; line-height: 1.5; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 900;
+      align-items: center; justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #fff; border-radius: 9px;
+      width: 490px; max-width: 95vw;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.28);
+      overflow: hidden;
+      animation: modalIn 0.2s ease;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(-14px) scale(0.97); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .modal-header {
+      background: var(--header); color: #fff;
+      padding: 16px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .modal-header h3 { font-size: 15px; font-weight: 600; }
+
+    .modal-close {
+      background: none; border: none;
+      color: rgba(255,255,255,0.7); font-size: 22px;
+      cursor: pointer; line-height: 1;
+      transition: color 0.15s;
+    }
+
+    .modal-close:hover { color: #fff; }
+
+    .modal-body { padding: 24px 22px 8px; }
+
     .form-group { margin-bottom: 18px; }
-    .form-label { display: block; font-size: 12px; font-weight: 700; color: #001B5E; letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 6px; }
-    .form-label .required { color: #dc3545; margin-left: 2px; }
-    .form-control { width: 100%; padding: 9px 12px; border: 1.5px solid #d1d9e0; border-radius: 5px; font-size: 13px; color: #2F3A4A; background: #FFFFFF; outline: none; transition: border-color 0.15s; }
-    .form-control:focus { border-color: #0087E6; box-shadow: 0 0 0 3px rgba(0,135,230,0.1); }
-    .form-control.error { border-color: #dc3545; }
-    .form-error { color: #dc3545; font-size: 11px; margin-top: 4px; }
-    .checkbox-group { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1.5px solid #d1d9e0; border-radius: 5px; cursor: pointer; transition: border-color 0.15s; }
-    .checkbox-group:hover { border-color: #0087E6; background: #f5f8ff; }
-    .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #0087E6; }
-    .checkbox-group label { font-size: 13px; color: #2F3A4A; cursor: pointer; }
 
-    /* Inline number input */
-    .inline-num { padding: 6px 10px; border: 1.5px solid #d1d9e0; border-radius: 5px; font-size: 13px; color: #2F3A4A; outline: none; transition: border-color 0.15s; text-align: right; }
-    .inline-num:focus { border-color: #0087E6; box-shadow: 0 0 0 3px rgba(0,135,230,0.1); }
+    .form-label {
+      display: block;
+      font-size: 11px; font-weight: 700; color: var(--header);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
 
-    /* Metric cards */
-    .metrics-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
-    .metric-card { background: #FFFFFF; border-radius: 6px; padding: 16px 20px; flex: 1; min-width: 140px; box-shadow: 0 2px 6px rgba(0,0,0,0.07); border-top: 3px solid #0087E6; }
-    .metric-card.yellow { border-top-color: #F2C94C; }
-    .metric-card .metric-label { font-size: 11px; font-weight: 700; color: #6b7a8d; text-transform: uppercase; letter-spacing: 0.6px; }
-    .metric-card .metric-value { font-size: 28px; font-weight: 700; color: #001B5E; line-height: 1.2; margin-top: 4px; }
-    .metric-card .metric-sub { font-size: 11px; color: #6b7a8d; margin-top: 2px; }
+    .form-input, .form-select {
+      width: 100%; padding: 9px 13px;
+      border: 1px solid #d1dae6; border-radius: 6px;
+      font-size: 14px; color: var(--body); background: #fff;
+      transition: border-color 0.15s;
+    }
 
-    /* Search bar */
-    .search-bar { position: relative; }
-    .search-bar input { padding: 8px 12px 8px 34px; border: 1.5px solid #d1d9e0; border-radius: 5px; font-size: 13px; color: #2F3A4A; outline: none; width: 220px; }
-    .search-bar input:focus { border-color: #0087E6; }
-    .search-bar .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9aaab8; font-size: 14px; }
+    .form-input:focus, .form-select:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,135,230,0.12);
+    }
 
-    /* Coming soon placeholder */
-    .coming-soon { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 32px; gap: 12px; text-align: center; }
-    .coming-soon .cs-icon { font-size: 52px; opacity: 0.2; }
-    .coming-soon h3 { color: #001B5E; font-size: 18px; }
-    .coming-soon p { color: #6b7a8d; font-size: 13px; }
+    .form-check-row { display: flex; align-items: center; gap: 10px; }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #f0f4f8; }
-    ::-webkit-scrollbar-thumb { background: #c5cfe0; border-radius: 3px; }
+    .form-check-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+
+    .form-check-row label { font-size: 13px; color: var(--body); cursor: pointer; }
+
+    .input-prefix-wrap { display: flex; align-items: center; }
+
+    .input-prefix {
+      background: #f0f2f7; border: 1px solid #d1dae6; border-right: none;
+      padding: 9px 12px; border-radius: 6px 0 0 6px;
+      font-size: 13px; color: #8a95a3; font-weight: 600;
+    }
+
+    .input-prefix + .form-input { border-radius: 0 6px 6px 0; }
+
+    .modal-footer {
+      padding: 16px 22px; border-top: 1px solid #f0f2f7;
+      display: flex; justify-content: flex-end; gap: 10px;
+    }
+
+    .btn-cancel {
+      padding: 9px 18px; border: 1px solid #d1dae6; border-radius: 6px;
+      background: #fff; color: var(--body); font-size: 13px; cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-cancel:hover { background: #f5f7fb; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 26px; right: 28px;
+      background: #1b7735; color: #fff;
+      padding: 12px 20px; border-radius: 7px;
+      font-size: 13px; font-weight: 500;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+      opacity: 0; transform: translateY(20px);
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 9999; pointer-events: none;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── Field error ── */
+    .field-error { font-size: 11px; color: #c62828; margin-top: 4px; display: none; }
+    .field-error.visible { display: block; }
+    .input-invalid { border-color: #c62828 !important; }
+
+    /* ── Cost input cell ── */
+    .cost-cell { display: flex; align-items: center; gap: 6px; }
+    .cost-prefix { font-size: 12px; color: #aab; font-weight: 600; }
+
+    /* ── Budget Assumption table ── */
+    .table-wrap.scrollable { overflow-x: auto; }
+
+    .th-item {
+      min-width: 130px;
+      max-width: 160px;
+      white-space: normal;
+      font-size: 11px;
+      line-height: 1.35;
+      vertical-align: bottom;
+    }
+
+    .th-cc   { min-width: 160px; }
+    .th-total {
+      min-width: 130px;
+      background: #dce8f7;
+      color: var(--header);
+      position: sticky;
+      right: 0;
+      border-left: 2px solid var(--accent);
+    }
+
+    .td-money {
+      text-align: right;
+      font-size: 12px;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .td-total-col {
+      background: #eef6ff;
+      font-weight: 700;
+      color: var(--header);
+      border-left: 2px solid var(--accent);
+      position: sticky;
+      right: 0;
+    }
+
+    .td-grand {
+      background: #f0f4fb;
+      font-weight: 600;
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .td-grand-label {
+      background: #f0f4fb;
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--header);
+      padding: 11px 16px;
+    }
+
+    tfoot tr { border-top: 2px solid var(--accent); }
+
+    .zero-val { color: #ccd; font-size: 11px; }
+
+    .hc-pill {
+      display: inline-block;
+      margin-left: 6px;
+      background: #eef2fb;
+      color: #5570a0;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+
+    .grand-total-card { border-left-color: var(--accent) !important; }
   </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
 
-const { useState } = React;
+<!-- ═══ TOP HEADER ═══ -->
+<div class="top-header">
+  <div class="header-brand">
+    <div class="header-icon">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+    </div>
+    <div>
+      <div class="header-title">Central Budgeting Fund</div>
+      <div class="header-sub">Financial Management System</div>
+    </div>
+  </div>
+  <div class="role-pill">
+    <label>Active Role</label>
+    <select id="roleSelect" onchange="switchRole(this.value)">
+      <option value="finance">Finance Rep</option>
+      <option value="hr">HR Rep</option>
+      <option value="branch">Branch Rep</option>
+    </select>
+  </div>
+</div>
 
-// ─── Initial Data ─────────────────────────────────────────────────────────────
-const DIVISIONS = ['OTM','HRD','CPD','CD','TD','I&I','ITD'];
-const TYPES = ['Admin','Revenue','Preventive'];
+<!-- ═══ MAIN LAYOUT ═══ -->
+<div class="layout">
 
-const DIVISION_DEFAULT = {
-  '100100': 'HRD', '100102': 'OTM', '100103': 'OTM', '100104': 'OTM',
-  '100105': 'HRD', '100106': 'HRD', '100107': 'CPD', '100108': 'CD',
-  '100109': 'TD',  '100110': 'CPD', '100111': 'CD',  '100112': 'ITD',
-  '100113': 'OTM', '100114': 'TD',  '100115': 'TD',  '100116': 'I&I',
-  '100117': 'I&I', '100118': 'ITD', '100119': 'ITD',
-};
-const TYPE_DEFAULT = {
-  '100100': 'Admin',      '100102': 'Revenue',    '100103': 'Revenue',  '100104': 'Revenue',
-  '100105': 'Admin',      '100106': 'Admin',       '100107': 'Revenue',  '100108': 'Revenue',
-  '100109': 'Revenue',    '100110': 'Revenue',     '100111': 'Revenue',  '100112': 'Admin',
-  '100113': 'Admin',      '100114': 'Revenue',     '100115': 'Revenue',  '100116': 'Preventive',
-  '100117': 'Preventive', '100118': 'Admin',       '100119': 'Admin',
-};
+  <!-- ── Sidebar ── -->
+  <div class="sidebar">
+    <div class="sidebar-section-label">Menu</div>
 
-const INITIAL_COST_CENTRES = [
-  {id:'100100', name:'Finance'},       {id:'100102', name:'D2B'},
-  {id:'100103', name:'ASB'},           {id:'100104', name:'ALB'},
-  {id:'100105', name:'Learning & Dev'},{id:'100106', name:'HR'},
-  {id:'100107', name:'LCOB'},          {id:'100108', name:'ACB'},
-  {id:'100109', name:'SCB'},           {id:'100110', name:'PCB'},
-  {id:'100111', name:'CCAB'},          {id:'100112', name:'SLMB'},
-  {id:'100113', name:'PSB'},           {id:'100114', name:'TTSB'},
-  {id:'100115', name:'TSDB'},          {id:'100116', name:'Dev of Station'},
-  {id:'100117', name:'Trial Space'},   {id:'100118', name:'IB'},
-  {id:'100119', name:'SIB'},
-].map(cc => ({
-  ...cc,
-  division: DIVISION_DEFAULT[cc.id] || 'OTM',
-  type: TYPE_DEFAULT[cc.id] || 'Admin',
-  requiresHeadcount: ['100102','100103','100104','100107','100108','100109','100110','100111','100114','100115'].includes(cc.id),
-}));
+    <div class="nav-item active" id="nav-cost-centre" onclick="navigate('cost-centre')">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+      </svg>
+      Cost Centre
+    </div>
 
-const INITIAL_BUDGET_ITEMS = [
-  { id: 'bi1',  name: 'Staff in Service Training',    costPerHeadcount: 0 },
-  { id: 'bi2',  name: 'Staff Welfare',                costPerHeadcount: 0 },
-  { id: 'bi3',  name: 'Team Building',                costPerHeadcount: 0 },
-  { id: 'bi4',  name: 'Dental Subsidy',               costPerHeadcount: 0 },
-  { id: 'bi5',  name: 'Medical Outpatient',            costPerHeadcount: 0 },
-  { id: 'bi6',  name: 'Medical Inpatient',             costPerHeadcount: 0 },
-  { id: 'bi7',  name: 'Socks Allowances',              costPerHeadcount: 0 },
-  { id: 'bi8',  name: 'Softphone Subscription',        costPerHeadcount: 0 },
-  { id: 'bi9',  name: 'Telecommunications Subsidy',    costPerHeadcount: 0 },
-  { id: 'bi10', name: 'Transport Claims',              costPerHeadcount: 0 },
-  { id: 'bi11', name: 'Pat on the Back (All Other)',   costPerHeadcount: 0 },
-  { id: 'bi12', name: 'Pat on the Back (CPD)',         costPerHeadcount: 0 },
-  { id: 'bi13', name: 'Pat on the Back (I&I)',         costPerHeadcount: 0 },
+    <div class="nav-item" id="nav-headcount" onclick="navigate('headcount')">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      Headcount
+    </div>
+
+    <div class="nav-item" id="nav-item-cost" onclick="navigate('item-cost')">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M12 7h.01M9 11h6m-6 4h6"/>
+      </svg>
+      Item Cost per<br>Headcount
+    </div>
+
+    <div class="nav-item" id="nav-budget-assumption" onclick="navigate('budget-assumption')">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      Budget Assumption
+    </div>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section-label">Coming Soon</div>
+
+    <div class="nav-item locked" title="Coming soon">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+      </svg>
+      Reports
+    </div>
+
+    <div class="nav-item locked" title="Coming soon">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      Settings
+    </div>
+  </div>
+
+  <!-- ── Content ── -->
+  <div class="content">
+    <div id="main-content"></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Create Cost Centre ═══ -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Create New Cost Centre</h3>
+      <button class="modal-close" onclick="closeModal('createModal')" aria-label="Close">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" for="newCode">Cost Centre Code *</label>
+        <input type="text" id="newCode" class="form-input" placeholder="e.g. 100120" maxlength="20" />
+        <div class="field-error" id="err-code">Code is required.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="newName">Cost Centre Name *</label>
+        <input type="text" id="newName" class="form-input" placeholder="Enter name" maxlength="80" />
+        <div class="field-error" id="err-name">Name is required.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="newDivision">Division *</label>
+        <select id="newDivision" class="form-select">
+          <option value="">-- Select Division --</option>
+          <option>OTM</option><option>HRD</option><option>CPD</option>
+          <option>CD</option><option>TD</option><option>I&amp;I</option><option>ITD</option>
+        </select>
+        <div class="field-error" id="err-division">Division is required.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="newType">Type *</label>
+        <select id="newType" class="form-select">
+          <option value="">-- Select Type --</option>
+          <option>Admin</option><option>Revenue</option><option>Preventive</option>
+        </select>
+        <div class="field-error" id="err-type">Type is required.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Requires Headcount</label>
+        <div class="form-check-row">
+          <input type="checkbox" id="newHeadcount" />
+          <label for="newHeadcount">Yes, this cost centre requires headcount</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('createModal')">Cancel</button>
+      <button class="btn-primary" onclick="saveCostCentre()">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Save Cost Centre
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Add Budget Item ═══ -->
+<div class="modal-overlay" id="budgetModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add New Budget Item</h3>
+      <button class="modal-close" onclick="closeModal('budgetModal')" aria-label="Close">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" for="biName">Budget Item Name *</label>
+        <input type="text" id="biName" class="form-input" placeholder="e.g. Medical Outpatient" maxlength="120" />
+        <div class="field-error" id="err-biName">Budget item name is required.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="biCost">Cost per Headcount</label>
+        <div class="input-prefix-wrap">
+          <span class="input-prefix">SGD</span>
+          <input type="number" id="biCost" class="form-input" placeholder="0.00" min="0" step="0.01" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('budgetModal')">Cancel</button>
+      <button class="btn-primary" onclick="saveBudgetItem()">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Add Item
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══ CONSTANTS ═══ */
+const DIVISIONS = ["OTM","HRD","CPD","CD","TD","I&I","ITD"];
+const TYPES     = ["Admin","Revenue","Preventive"];
+
+/* ═══ DATA ═══ */
+let db = [
+  { code:"100100", name:"Finance",        division:"HRD", type:"Admin",      headcount:false },
+  { code:"100102", name:"D2B",            division:"CD",  type:"Revenue",    headcount:true  },
+  { code:"100103", name:"ASB",            division:"CD",  type:"Revenue",    headcount:true  },
+  { code:"100104", name:"ALB",            division:"CD",  type:"Revenue",    headcount:true  },
+  { code:"100105", name:"Learning & Dev", division:"HRD", type:"Admin",      headcount:false },
+  { code:"100106", name:"HR",             division:"HRD", type:"Admin",      headcount:false },
+  { code:"100107", name:"LCOB",           division:"CD",  type:"Revenue",    headcount:true  },
+  { code:"100108", name:"ACB",            division:"CD",  type:"Revenue",    headcount:true  },
+  { code:"100109", name:"SCB",            division:"CD",  type:"Revenue",    headcount:true  },
+  { code:"100110", name:"PCB",            division:"CD",  type:"Revenue",    headcount:true  },
+  { code:"100111", name:"CCAB",           division:"CD",  type:"Revenue",    headcount:true  },
+  { code:"100112", name:"SLMB",           division:"TD",  type:"Admin",      headcount:false },
+  { code:"100113", name:"PSB",            division:"OTM", type:"Admin",      headcount:false },
+  { code:"100114", name:"TTSB",           division:"TD",  type:"Revenue",    headcount:true  },
+  { code:"100115", name:"TSDB",           division:"TD",  type:"Revenue",    headcount:true  },
+  { code:"100116", name:"Dev of Station", division:"ITD", type:"Preventive", headcount:false },
+  { code:"100117", name:"Trial Space",    division:"I&I", type:"Preventive", headcount:false },
+  { code:"100118", name:"IB",             division:"CPD", type:"Revenue",    headcount:true  },
+  { code:"100119", name:"SIB",            division:"CPD", type:"Revenue",    headcount:true  },
 ];
 
-// ─── Nav Config ───────────────────────────────────────────────────────────────
-const NAV = [
-  { section: 'Overview', items: [
-    { key: 'dashboard',         label: 'Dashboard',           icon: '📊' },
-  ]},
-  { section: 'Administration', items: [
-    { key: 'cost-centre',       label: 'Cost Centre',         icon: '🏢', badge: 'FIN',  badgeStyle: { background:'rgba(0,135,230,0.2)', color:'#0087E6' } },
-    { key: 'headcount',         label: 'Headcount',           icon: '👤' },
-    { key: 'employees',         label: 'Employees',           icon: '👥', badge: 'HR',   badgeStyle: { background:'rgba(242,201,76,0.2)', color:'#F2C94C' } },
-    { key: 'branches',          label: 'Branches',            icon: '🏦', badge: 'BR',   badgeStyle: { background:'rgba(255,255,255,0.15)', color:'rgba(255,255,255,0.7)' } },
-  ]},
-  { section: 'Budgeting', items: [
-    { key: 'item-cost',         label: 'Cost per Headcount',  icon: '💵', badge: 'F+HR', badgeStyle: { background:'rgba(0,135,230,0.2)', color:'#88ccff' } },
-    { key: 'budget-assumption', label: 'Budget Assumption',   icon: '📐', badge: 'F+HR', badgeStyle: { background:'rgba(0,135,230,0.2)', color:'#88ccff' } },
-    { key: 'budget-plan',       label: 'Budget Plan',         icon: '📋' },
-    { key: 'allocations',       label: 'Allocations',         icon: '💰' },
-    { key: 'reports',           label: 'Reports',             icon: '📈' },
-  ]},
+let headcountValues = {};
+
+let budgetItems = [
+  { id:1,  name:"Staff in Service Training",          cost:"" },
+  { id:2,  name:"Staff Welfare",                      cost:"" },
+  { id:3,  name:"Team Building",                      cost:"" },
+  { id:4,  name:"Dental Subsidy",                     cost:"" },
+  { id:5,  name:"Medical Outpatient",                 cost:"" },
+  { id:6,  name:"Medical Inpatient",                  cost:"" },
+  { id:7,  name:"Socks Allowances",                   cost:"" },
+  { id:8,  name:"Softphone Subscription",             cost:"" },
+  { id:9,  name:"Telecommunications Subsidy",         cost:"" },
+  { id:10, name:"Transport Claims",                   cost:"" },
+  { id:11, name:"Pat on the Back (All Cost Centres)", cost:"" },
+  { id:12, name:"Pat on the Back (CPD)",              cost:"" },
+  { id:13, name:"Pat on the Back (I&I)",              cost:"" },
 ];
+let nextBudgetId = 14;
 
-const ROLE_LABELS   = { finance: 'Finance Rep', hr: 'HR Rep', branch: 'Branch Rep' };
-const ROLE_INITIALS = { finance: 'FR', hr: 'HR', branch: 'BR' };
+/* ═══ STATE ═══ */
+let currentRole = "finance";
+let currentPage = "cost-centre";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function TypeBadge({ type }) {
-  const cls = { Admin: 'badge-admin', Revenue: 'badge-revenue', Preventive: 'badge-preventive' }[type] || 'badge-admin';
-  return <span className={`badge ${cls}`}>{type}</span>;
+/* ═══ ROLE ═══ */
+function switchRole(val) {
+  currentRole = val;
+  render();
 }
 
-function DivTag({ division }) {
-  return (
-    <span style={{background:'#f0f4ff', color:'#001B5E', fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:12, border:'1px solid #cdd8f0', letterSpacing:0.4}}>
-      {division}
-    </span>
-  );
+/* ═══ NAV ═══ */
+function navigate(page) {
+  currentPage = page;
+  document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
+  const el = document.getElementById("nav-" + page);
+  if (el) el.classList.add("active");
+  render();
 }
 
-function fmtMoney(n) {
-  if (n === 0) return '—';
-  return '$' + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/* ═══ RENDER ROUTER ═══ */
+function render() {
+  const c = document.getElementById("main-content");
+  if      (currentPage === "cost-centre")      renderCostCentre(c);
+  else if (currentPage === "headcount")        renderHeadcount(c);
+  else if (currentPage === "item-cost")        renderItemCost(c);
+  else if (currentPage === "budget-assumption") renderBudgetAssumption(c);
 }
 
-// ─── Modal: Create / Edit Cost Centre ─────────────────────────────────────────
-function CostCentreModal({ initial, onSave, onClose, existingIds }) {
-  const isEdit = !!initial;
-  const [form, setForm] = useState(initial || { id:'', name:'', division: DIVISIONS[0], type: TYPES[0], requiresHeadcount: false });
-  const [errors, setErrors] = useState({});
+/* ══════════════════════════════
+   COST CENTRE PAGE
+══════════════════════════════ */
+function renderCostCentre(c) {
+  if (currentRole !== "finance") {
+    c.innerHTML = accessDenied("Cost Centre", "Finance Representatives");
+    return;
+  }
 
-  const set = (field, val) => { setForm(f => ({...f, [field]: val})); setErrors(e => ({...e, [field]: ''})); };
+  const total    = db.length;
+  const withHC   = db.filter(r => r.headcount).length;
+  const divCount = new Set(db.map(r => r.division)).size;
 
-  const validate = () => {
-    const e = {};
-    if (!form.id.trim()) e.id = 'Cost Centre code is required';
-    else if (!/^\d{6}$/.test(form.id.trim())) e.id = 'Must be a 6-digit number';
-    else if (!isEdit && existingIds.includes(form.id.trim())) e.id = 'This code already exists';
-    if (!form.name.trim()) e.name = 'Name is required';
-    return e;
-  };
+  const rows = db.map((r, i) => `
+    <tr>
+      <td>
+        <div class="cc-code">${esc(r.code)}</div>
+        <div class="cc-name">${esc(r.name)}</div>
+      </td>
+      <td>
+        <select class="tbl-select" onchange="updateCCRow(${i},'division',this.value)">
+          ${DIVISIONS.map(d => `<option${d===r.division?" selected":""}>${esc(d)}</option>`).join("")}
+        </select>
+      </td>
+      <td>
+        <select class="tbl-select" onchange="updateCCRow(${i},'type',this.value)">
+          ${TYPES.map(t => `<option${t===r.type?" selected":""}>${esc(t)}</option>`).join("")}
+        </select>
+      </td>
+      <td class="td-center">
+        <input type="checkbox" ${r.headcount?"checked":""}
+          onchange="updateCCRow(${i},'headcount',this.checked)"
+          style="width:17px;height:17px;accent-color:var(--accent);cursor:pointer;" />
+      </td>
+    </tr>`).join("");
 
-  const handleSave = () => {
-    const e = validate();
-    if (Object.keys(e).length) { setErrors(e); return; }
-    onSave({ ...form, id: form.id.trim(), name: form.name.trim() });
-  };
+  c.innerHTML = `
+    <div class="page-header-row">
+      <div>
+        <div class="page-title">Cost Centre Management</div>
+        <div class="accent-bar"></div>
+      </div>
+      <button class="btn-primary" onclick="openModal('createModal')">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        Create New Cost Centre
+      </button>
+    </div>
 
-  return (
-    <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal">
-        <div className="modal-header">
-          <div>
-            <h3>{isEdit ? 'Edit Cost Centre' : 'Create New Cost Centre'}</h3>
-            <div className="accent-line" />
-          </div>
-          <button className="modal-close" onClick={onClose}>✕</button>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">${total}</div>
+        <div class="stat-label">Total Cost Centres</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${withHC}</div>
+        <div class="stat-label">Requires Headcount</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${total - withHC}</div>
+        <div class="stat-label">No Headcount</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${divCount}</div>
+        <div class="stat-label">Active Divisions</div>
+      </div>
+    </div>
+
+    <div class="section-divider">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+      </svg>
+      Cost Centre List
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Cost Centre</th>
+            <th>Division</th>
+            <th>Type</th>
+            <th>Requires Headcount</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function updateCCRow(i, field, value) {
+  db[i][field] = value;
+  if (field === "headcount") {
+    const badge = document.getElementById(`hcbadge-${i}`);
+    if (badge) {
+      badge.textContent = value ? "Yes" : "No";
+      badge.className   = `badge ${value ? "badge-yes" : "badge-no"}`;
+    }
+  }
+  toast("Changes saved");
+}
+
+/* ═══ Cost Centre Modal ═══ */
+function saveCostCentre() {
+  const code      = document.getElementById("newCode").value.trim();
+  const name      = document.getElementById("newName").value.trim();
+  const division  = document.getElementById("newDivision").value;
+  const type      = document.getElementById("newType").value;
+  const headcount = document.getElementById("newHeadcount").checked;
+
+  let valid = true;
+
+  function setErr(fId, eId, cond) {
+    document.getElementById(fId).classList.toggle("input-invalid", cond);
+    document.getElementById(eId).classList.toggle("visible", cond);
+    if (cond) valid = false;
+  }
+
+  setErr("newCode",     "err-code",     !code);
+  setErr("newName",     "err-name",     !name);
+  setErr("newDivision", "err-division", !division);
+  setErr("newType",     "err-type",     !type);
+
+  if (!valid) return;
+
+  db.push({ code, name, division, type, headcount });
+  closeModal("createModal");
+  renderCostCentre(document.getElementById("main-content"));
+  toast(`Cost Centre ${code} — ${name} created`);
+}
+
+/* ══════════════════════════════
+   HEADCOUNT PAGE
+══════════════════════════════ */
+function renderHeadcount(c) {
+  const hcList = db.filter(r => r.headcount);
+  const filled = hcList.filter(r => headcountValues[r.code] && headcountValues[r.code] !== "");
+  const total  = hcList.reduce((sum, r) => sum + (parseInt(headcountValues[r.code]) || 0), 0);
+
+  let rows = "";
+  if (hcList.length === 0) {
+    rows = `<tr><td colspan="4">
+      <div class="empty-state">
+        <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#d0d5dd" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <p>No cost centres currently require headcount.<br>Enable "Requires Headcount" in the Cost Centre tab.</p>
+      </div>
+    </td></tr>`;
+  } else {
+    rows = hcList.map((r, idx) => `
+      <tr>
+        <td>
+          <div class="cc-code">${esc(r.code)}</div>
+          <div class="cc-name">${esc(r.name)}</div>
+        </td>
+        <td>${esc(r.division)}</td>
+        <td>${esc(r.type)}</td>
+        <td>
+          <input type="number" class="tbl-input num"
+            value="${esc(headcountValues[r.code] || '')}"
+            min="0" step="1" placeholder="0"
+            onchange="updateHeadcount('${esc(r.code)}', this.value)"
+            oninput="updateHeadcount('${esc(r.code)}', this.value)" />
+        </td>
+      </tr>`).join("");
+  }
+
+  c.innerHTML = `
+    <div class="page-header-row">
+      <div>
+        <div class="page-title">Headcount</div>
+        <div class="accent-bar"></div>
+      </div>
+    </div>
+
+    <div class="info-callout">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      Only cost centres marked <strong>&nbsp;"Requires Headcount"&nbsp;</strong> in the Cost Centre tab appear here. Enter the number of headcount for each.
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">${hcList.length}</div>
+        <div class="stat-label">Cost Centres</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${filled.length}</div>
+        <div class="stat-label">Filled In</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${total}</div>
+        <div class="stat-label">Total Headcount</div>
+      </div>
+    </div>
+
+    <div class="section-divider">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      Headcount by Cost Centre
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Cost Centre</th>
+            <th>Division</th>
+            <th>Type</th>
+            <th>No. of Headcount</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function updateHeadcount(code, value) {
+  headcountValues[code] = value;
+  const hcList = db.filter(r => r.headcount);
+  const total  = hcList.reduce((sum, r) => sum + (parseInt(headcountValues[r.code]) || 0), 0);
+  const filled = hcList.filter(r => headcountValues[r.code] && headcountValues[r.code] !== "").length;
+  const vals   = document.querySelectorAll(".stat-value");
+  if (vals[1]) vals[1].textContent = filled;
+  if (vals[2]) vals[2].textContent = total;
+  toast("Headcount updated");
+}
+
+/* ══════════════════════════════
+   ITEM COST PER HEADCOUNT PAGE
+══════════════════════════════ */
+function renderItemCost(c) {
+  if (currentRole === "branch") {
+    c.innerHTML = accessDenied("Item Cost per Headcount", "Finance Representatives and HR Representatives");
+    return;
+  }
+
+  const canEdit  = currentRole === "finance" || currentRole === "hr";
+  const itemsWithCost = budgetItems.filter(b => b.cost !== "").length;
+  const totalCost     = budgetItems.reduce((s, b) => s + (parseFloat(b.cost) || 0), 0);
+
+  const rows = budgetItems.map((b, idx) => `
+    <tr>
+      <td class="td-center"><span class="row-num">${idx + 1}</span></td>
+      <td>
+        <input type="text" class="tbl-input wide"
+          value="${esc(b.name)}"
+          ${canEdit ? '' : 'readonly'}
+          onchange="updateBudgetName(${b.id}, this.value)"
+          style="${canEdit ? '' : 'border-color:transparent;background:transparent;cursor:default;'}" />
+      </td>
+      <td>
+        <div class="cost-cell">
+          <span class="cost-prefix">SGD</span>
+          <input type="number" class="tbl-input num"
+            value="${esc(b.cost)}"
+            ${canEdit ? '' : 'readonly'}
+            min="0" step="0.01" placeholder="0.00"
+            onchange="updateBudgetCost(${b.id}, this.value)"
+            style="${canEdit ? '' : 'border-color:transparent;background:transparent;cursor:default;text-align:right;'}" />
         </div>
-        <div className="modal-body">
-          <div className="form-group">
-            <label className="form-label">Cost Centre Code <span className="required">*</span></label>
-            <input className={`form-control ${errors.id ? 'error' : ''}`} placeholder="e.g. 100120"
-              value={form.id} onChange={e => set('id', e.target.value)} disabled={isEdit} maxLength={6} />
-            {errors.id && <div className="form-error">{errors.id}</div>}
-          </div>
-          <div className="form-group">
-            <label className="form-label">Name <span className="required">*</span></label>
-            <input className={`form-control ${errors.name ? 'error' : ''}`} placeholder="e.g. Operations"
-              value={form.name} onChange={e => set('name', e.target.value)} />
-            {errors.name && <div className="form-error">{errors.name}</div>}
-          </div>
-          <div className="form-group">
-            <label className="form-label">Division <span className="required">*</span></label>
-            <select className="form-control" value={form.division} onChange={e => set('division', e.target.value)}>
-              {DIVISIONS.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-          </div>
-          <div className="form-group">
-            <label className="form-label">Type <span className="required">*</span></label>
-            <select className="form-control" value={form.type} onChange={e => set('type', e.target.value)}>
-              {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-          <div className="form-group">
-            <label className="form-label">Requires Headcount</label>
-            <div className="checkbox-group" onClick={() => set('requiresHeadcount', !form.requiresHeadcount)}>
-              <input type="checkbox" checked={form.requiresHeadcount}
-                onChange={() => set('requiresHeadcount', !form.requiresHeadcount)}
-                onClick={e => e.stopPropagation()} />
-              <label>{form.requiresHeadcount ? 'Yes — headcount required for this cost centre' : 'No — headcount not required'}</label>
-            </div>
-          </div>
-        </div>
-        <div className="modal-footer">
-          <button className="btn btn-outline" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleSave}>
-            {isEdit ? '💾 Save Changes' : '✚ Create Cost Centre'}
+      </td>
+      ${canEdit ? `
+      <td class="td-center">
+        <div class="actions-cell" style="justify-content:center">
+          <button class="btn-icon" title="Delete item" onclick="deleteBudgetItem(${b.id})">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
           </button>
         </div>
+      </td>` : ""}
+    </tr>`).join("");
+
+  const actionHeader = canEdit ? `<th class="th-center" style="width:60px">Actions</th>` : "";
+
+  c.innerHTML = `
+    <div class="page-header-row">
+      <div>
+        <div class="page-title">Item Cost per Headcount</div>
+        <div class="accent-bar"></div>
+      </div>
+      ${canEdit ? `
+      <button class="btn-primary" onclick="openModal('budgetModal')">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        Add New Budget Item
+      </button>` : ""}
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">${budgetItems.length}</div>
+        <div class="stat-label">Budget Items</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${itemsWithCost}</div>
+        <div class="stat-label">Costs Entered</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">SGD ${totalCost.toLocaleString('en-SG', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+        <div class="stat-label">Total Cost / Head</div>
       </div>
     </div>
-  );
-}
 
-// ─── Confirm Delete Modal ──────────────────────────────────────────────────────
-function DeleteModal({ title, message, onConfirm, onClose }) {
-  return (
-    <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal" style={{maxWidth: 420}}>
-        <div className="modal-header" style={{background:'#b02a37'}}>
-          <div>
-            <h3>{title}</h3>
-            <div className="accent-line" style={{background:'#f5b7b1'}} />
-          </div>
-          <button className="modal-close" onClick={onClose}>✕</button>
-        </div>
-        <div className="modal-body">
-          <p style={{fontSize:14, lineHeight:1.6}} dangerouslySetInnerHTML={{__html: message}} />
-        </div>
-        <div className="modal-footer">
-          <button className="btn btn-outline" onClick={onClose}>Cancel</button>
-          <button className="btn btn-danger" onClick={onConfirm}>Delete</button>
-        </div>
-      </div>
+    <div class="section-divider">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M12 7h.01M9 11h6m-6 4h6"/>
+      </svg>
+      Budget Items
     </div>
-  );
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="th-center" style="width:50px">#</th>
+            <th>Budget Item</th>
+            <th style="width:180px">Cost per Headcount</th>
+            ${actionHeader}
+          </tr>
+        </thead>
+        <tbody>${rows.length ? rows : `
+          <tr><td colspan="${canEdit?4:3}">
+            <div class="empty-state">
+              <p>No budget items yet. Click "Add New Budget Item" to get started.</p>
+            </div>
+          </td></tr>`}
+        </tbody>
+      </table>
+    </div>`;
 }
 
-// ─── Cost Centre Tab ───────────────────────────────────────────────────────────
-function CostCentreTab({ role, data, setData }) {
-  const [showCreate, setShowCreate] = useState(false);
-  const [editTarget, setEditTarget] = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [search, setSearch] = useState('');
+function updateBudgetName(id, value) {
+  const item = budgetItems.find(b => b.id === id);
+  if (item) { item.name = value; toast("Item name updated"); }
+}
 
-  if (role !== 'finance') {
-    return (
-      <div className="card" style={{borderRadius:6}}>
-        <div className="access-denied">
-          <div className="lock-icon">🔒</div>
-          <h3>Access Restricted</h3>
-          <p>The Cost Centre module is only accessible to <strong>Finance Representatives</strong>.</p>
-        </div>
-      </div>
-    );
+function updateBudgetCost(id, value) {
+  const item = budgetItems.find(b => b.id === id);
+  if (item) {
+    item.cost = value;
+    refreshItemCostStats();
+    toast("Cost updated");
+  }
+}
+
+function deleteBudgetItem(id) {
+  const item = budgetItems.find(b => b.id === id);
+  if (!item) return;
+  if (!confirm(`Delete "${item.name}"?`)) return;
+  budgetItems = budgetItems.filter(b => b.id !== id);
+  renderItemCost(document.getElementById("main-content"));
+  toast("Budget item removed");
+}
+
+function refreshItemCostStats() {
+  const itemsWithCost = budgetItems.filter(b => b.cost !== "").length;
+  const totalCost     = budgetItems.reduce((s, b) => s + (parseFloat(b.cost) || 0), 0);
+  const vals = document.querySelectorAll(".stat-value");
+  if (vals[0]) vals[0].textContent = budgetItems.length;
+  if (vals[1]) vals[1].textContent = itemsWithCost;
+  if (vals[2]) vals[2].textContent = "SGD " + totalCost.toLocaleString('en-SG', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+/* ═══ Budget Item Modal ═══ */
+function saveBudgetItem() {
+  const name = document.getElementById("biName").value.trim();
+  const cost = document.getElementById("biCost").value;
+
+  document.getElementById("biName").classList.toggle("input-invalid", !name);
+  document.getElementById("err-biName").classList.toggle("visible", !name);
+  if (!name) return;
+
+  budgetItems.push({ id: nextBudgetId++, name, cost: cost || "" });
+  closeModal("budgetModal");
+  renderItemCost(document.getElementById("main-content"));
+  toast(`"${name}" added to budget items`);
+}
+
+/* ══════════════════════════════
+   BUDGET ASSUMPTION PAGE
+══════════════════════════════ */
+function renderBudgetAssumption(c) {
+  if (currentRole === "branch") {
+    c.innerHTML = accessDenied("Budget Assumption", "Finance Representatives and HR Representatives");
+    return;
   }
 
-  const filtered = data.filter(cc =>
-    cc.id.includes(search) ||
-    cc.name.toLowerCase().includes(search.toLowerCase()) ||
-    cc.division.toLowerCase().includes(search.toLowerCase()) ||
-    cc.type.toLowerCase().includes(search.toLowerCase())
+  const hcList = db.filter(r => r.headcount);
+  const totalHC = hcList.reduce((s, r) => s + (parseInt(headcountValues[r.code]) || 0), 0);
+
+  /* per-item grand totals (sum across all CCs) */
+  const itemTotals = budgetItems.map(item =>
+    hcList.reduce((sum, cc) => {
+      const hc   = parseInt(headcountValues[cc.code]) || 0;
+      const cost = parseFloat(item.cost) || 0;
+      return sum + hc * cost;
+    }, 0)
   );
 
-  const handleCreate  = (newCC)   => { setData(d => [...d, newCC]); setShowCreate(false); };
-  const handleEdit    = (updated) => { setData(d => d.map(cc => cc.id === updated.id ? updated : cc)); setEditTarget(null); };
-  const handleDelete  = ()        => { setData(d => d.filter(cc => cc.id !== deleteTarget.id)); setDeleteTarget(null); };
-
-  const typeCounts = data.reduce((acc, cc) => { acc[cc.type] = (acc[cc.type]||0)+1; return acc; }, {});
-  const hcCount    = data.filter(cc => cc.requiresHeadcount).length;
-
-  return (
-    <>
-      <div className="metrics-row">
-        <div className="metric-card">
-          <div className="metric-label">Total Cost Centres</div>
-          <div className="metric-value">{data.length}</div>
-          <div className="metric-sub">All active records</div>
-        </div>
-        <div className="metric-card yellow">
-          <div className="metric-label">Requires Headcount</div>
-          <div className="metric-value">{hcCount}</div>
-          <div className="metric-sub">of {data.length} cost centres</div>
-        </div>
-        <div className="metric-card">
-          <div className="metric-label">Revenue Centres</div>
-          <div className="metric-value">{typeCounts['Revenue']||0}</div>
-          <div className="metric-sub">Type: Revenue</div>
-        </div>
-        <div className="metric-card">
-          <div className="metric-label">Admin Centres</div>
-          <div className="metric-value">{typeCounts['Admin']||0}</div>
-          <div className="metric-sub">Type: Admin</div>
-        </div>
-      </div>
-
-      <div className="section-divider">
-        <span>Cost Centre Registry</span>
-        <span style={{fontSize:11, opacity:0.7, fontWeight:400, textTransform:'none', letterSpacing:0}}>Finance View</span>
-      </div>
-      <div className="card">
-        <div className="card-header">
-          <div className="card-header-left">
-            <div className="search-bar">
-              <span className="search-icon">🔍</span>
-              <input placeholder="Search cost centres…" value={search} onChange={e => setSearch(e.target.value)} />
-            </div>
-            <div className="record-count">{filtered.length} record{filtered.length !== 1 ? 's' : ''}</div>
-          </div>
-          <button className="btn btn-primary" onClick={() => setShowCreate(true)}>✚ Create New Cost Centre</button>
-        </div>
-        <div className="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Cost Centre</th><th>Name</th><th>Division</th><th>Type</th>
-                <th style={{textAlign:'center'}}>Requires Headcount</th>
-                <th style={{textAlign:'center'}}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={6} style={{textAlign:'center', color:'#9aaab8', padding:'32px', fontSize:13}}>No cost centres match your search.</td></tr>
-              ) : filtered.map(cc => (
-                <tr key={cc.id}>
-                  <td className="col-cc">{cc.id}</td>
-                  <td style={{fontWeight:500}}>{cc.name}</td>
-                  <td><DivTag division={cc.division} /></td>
-                  <td><TypeBadge type={cc.type} /></td>
-                  <td style={{textAlign:'center'}}>
-                    <span className={cc.requiresHeadcount ? 'badge-yes' : 'badge-no'}>
-                      {cc.requiresHeadcount ? '✓ Yes' : '✗ No'}
-                    </span>
-                  </td>
-                  <td style={{textAlign:'center'}}>
-                    <div className="action-btns" style={{justifyContent:'center'}}>
-                      <button className="btn btn-outline btn-sm" onClick={() => setEditTarget(cc)}>✏️ Edit</button>
-                      <button className="btn btn-sm" style={{background:'#fef0f0', color:'#c0392b', border:'1.5px solid #f5b7b1'}} onClick={() => setDeleteTarget(cc)}>🗑</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {showCreate && <CostCentreModal onSave={handleCreate} onClose={() => setShowCreate(false)} existingIds={data.map(cc => cc.id)} />}
-      {editTarget  && <CostCentreModal initial={editTarget} onSave={handleEdit} onClose={() => setEditTarget(null)} existingIds={data.map(cc => cc.id)} />}
-      {deleteTarget && (
-        <DeleteModal
-          title="Delete Cost Centre"
-          message={`Are you sure you want to delete <strong>${deleteTarget.id} — ${deleteTarget.name}</strong>? This action cannot be undone.`}
-          onConfirm={handleDelete}
-          onClose={() => setDeleteTarget(null)}
-        />
-      )}
-    </>
+  /* per-CC row totals */
+  const ccTotals = hcList.map(cc =>
+    budgetItems.reduce((sum, item) => {
+      const hc   = parseInt(headcountValues[cc.code]) || 0;
+      const cost = parseFloat(item.cost) || 0;
+      return sum + hc * cost;
+    }, 0)
   );
-}
 
-// ─── Headcount Tab ─────────────────────────────────────────────────────────────
-function HeadcountTab({ costCentres, headcounts, setHeadcounts }) {
-  const hcCentres = costCentres.filter(cc => cc.requiresHeadcount);
+  const grandTotal = itemTotals.reduce((s, v) => s + v, 0);
 
-  const handleChange = (id, val) => {
-    const num = parseInt(val, 10);
-    setHeadcounts(h => ({ ...h, [id]: isNaN(num) || num < 0 ? 0 : num }));
-  };
+  /* ── header row ── */
+  const itemHeaders = budgetItems.map(b =>
+    `<th class="th-item">${esc(b.name)}</th>`
+  ).join("");
 
-  const total = hcCentres.reduce((sum, cc) => sum + (headcounts[cc.id] || 0), 0);
-
-  return (
-    <>
-      <div className="metrics-row">
-        <div className="metric-card">
-          <div className="metric-label">Cost Centres</div>
-          <div className="metric-value">{hcCentres.length}</div>
-          <div className="metric-sub">Requiring headcount</div>
+  /* ── data rows ── */
+  const dataRows = hcList.length === 0
+    ? `<tr><td colspan="${budgetItems.length + 2}">
+        <div class="empty-state">
+          <p>No cost centres require headcount yet.<br>
+             Set headcount values in the Headcount tab first.</p>
         </div>
-        <div className="metric-card yellow">
-          <div className="metric-label">Total Headcount</div>
-          <div className="metric-value">{total}</div>
-          <div className="metric-sub">Across all cost centres</div>
-        </div>
-      </div>
+       </td></tr>`
+    : hcList.map((cc, ci) => {
+        const hc    = parseInt(headcountValues[cc.code]) || 0;
+        const cells = budgetItems.map(item => {
+          const val = hc * (parseFloat(item.cost) || 0);
+          return `<td class="td-money">${val > 0 ? fmt(val) : '<span class="zero-val">—</span>'}</td>`;
+        }).join("");
+        return `
+          <tr>
+            <td class="th-cc">
+              <div class="cc-code">${esc(cc.code)}</div>
+              <div class="cc-name">${esc(cc.name)}<span class="hc-pill">${hc} pax</span></div>
+            </td>
+            ${cells}
+            <td class="td-money td-total-col">
+              ${ccTotals[ci] > 0 ? fmt(ccTotals[ci]) : '<span class="zero-val">—</span>'}
+            </td>
+          </tr>`;
+      }).join("");
 
-      <div className="section-divider">
-        <span>Headcount Registry</span>
-        <span style={{fontSize:11, opacity:0.7, fontWeight:400, textTransform:'none', letterSpacing:0}}>All Roles — Editable</span>
-      </div>
-      <div className="card">
-        <div className="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Cost Centre</th><th>Name</th><th>Division</th><th>Type</th>
-                <th style={{textAlign:'center', width:140}}>Headcount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {hcCentres.length === 0 ? (
-                <tr><td colSpan={5} style={{textAlign:'center', color:'#9aaab8', padding:'32px', fontSize:13}}>
-                  No cost centres require headcount. Enable "Requires Headcount" in the Cost Centre settings.
-                </td></tr>
-              ) : hcCentres.map(cc => (
-                <tr key={cc.id}>
-                  <td className="col-cc">{cc.id}</td>
-                  <td style={{fontWeight:500}}>{cc.name}</td>
-                  <td><DivTag division={cc.division} /></td>
-                  <td><TypeBadge type={cc.type} /></td>
-                  <td style={{textAlign:'center'}}>
-                    <input type="number" min="0" value={headcounts[cc.id] || 0}
-                      onChange={e => handleChange(cc.id, e.target.value)}
-                      className="inline-num" style={{width:90, textAlign:'center'}} />
-                  </td>
-                </tr>
-              ))}
-              {hcCentres.length > 0 && (
-                <tr className="total-row">
-                  <td colSpan={4} style={{textAlign:'right', letterSpacing:0.3, fontSize:13}}>Total Headcount</td>
-                  <td style={{textAlign:'center', fontSize:16}}>{total}</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </>
-  );
-}
+  /* ── grand total row ── */
+  const grandCells = itemTotals.map(v =>
+    `<td class="td-grand">${v > 0 ? fmt(v) : '<span class="zero-val">—</span>'}</td>`
+  ).join("");
 
-// ─── Modal: Budget Item ────────────────────────────────────────────────────────
-function BudgetItemModal({ initial, onSave, onClose, existingNames }) {
-  const isEdit = !!initial;
-  const [form, setForm] = useState(
-    initial ? { name: initial.name, costPerHeadcount: String(initial.costPerHeadcount) }
-            : { name: '', costPerHeadcount: '' }
-  );
-  const [errors, setErrors] = useState({});
-
-  const set = (field, val) => { setForm(f => ({...f, [field]: val})); setErrors(e => ({...e, [field]: ''})); };
-
-  const validate = () => {
-    const e = {};
-    if (!form.name.trim()) {
-      e.name = 'Budget item name is required';
-    } else if (!isEdit && existingNames.map(n => n.toLowerCase()).includes(form.name.trim().toLowerCase())) {
-      e.name = 'This item already exists';
-    }
-    const cost = parseFloat(form.costPerHeadcount);
-    if (form.costPerHeadcount === '' || isNaN(cost) || cost < 0) e.costPerHeadcount = 'Enter a valid amount (0 or more)';
-    return e;
-  };
-
-  const handleSave = () => {
-    const e = validate();
-    if (Object.keys(e).length) { setErrors(e); return; }
-    onSave({ ...(initial || {}), name: form.name.trim(), costPerHeadcount: parseFloat(form.costPerHeadcount) });
-  };
-
-  return (
-    <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal">
-        <div className="modal-header">
-          <div>
-            <h3>{isEdit ? 'Edit Budget Item' : 'Add New Budget Item'}</h3>
-            <div className="accent-line" />
-          </div>
-          <button className="modal-close" onClick={onClose}>✕</button>
-        </div>
-        <div className="modal-body">
-          <div className="form-group">
-            <label className="form-label">Budget Item Name <span className="required">*</span></label>
-            <input className={`form-control ${errors.name ? 'error' : ''}`}
-              placeholder="e.g. Staff Welfare" value={form.name}
-              onChange={e => set('name', e.target.value)} />
-            {errors.name && <div className="form-error">{errors.name}</div>}
-          </div>
-          <div className="form-group">
-            <label className="form-label">Cost per Headcount ($) <span className="required">*</span></label>
-            <input type="number" min="0" step="0.01"
-              className={`form-control ${errors.costPerHeadcount ? 'error' : ''}`}
-              placeholder="e.g. 150" value={form.costPerHeadcount}
-              onChange={e => set('costPerHeadcount', e.target.value)} />
-            {errors.costPerHeadcount && <div className="form-error">{errors.costPerHeadcount}</div>}
-          </div>
-        </div>
-        <div className="modal-footer">
-          <button className="btn btn-outline" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleSave}>
-            {isEdit ? '💾 Save Changes' : '✚ Add Budget Item'}
-          </button>
-        </div>
+  c.innerHTML = `
+    <div class="page-header-row">
+      <div>
+        <div class="page-title">Budget Assumption</div>
+        <div class="accent-bar"></div>
       </div>
     </div>
-  );
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">${hcList.length}</div>
+        <div class="stat-label">Cost Centres</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${totalHC}</div>
+        <div class="stat-label">Total Headcount</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${budgetItems.length}</div>
+        <div class="stat-label">Budget Items</div>
+      </div>
+      <div class="stat-card grand-total-card">
+        <div class="stat-value" style="font-size:18px">SGD ${fmt(grandTotal)}</div>
+        <div class="stat-label">Grand Total Budget</div>
+      </div>
+    </div>
+
+    <div class="section-divider">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      Budget Matrix — Cost per Headcount × Headcount
+    </div>
+    <div class="table-wrap scrollable">
+      <table style="min-width:max-content">
+        <thead>
+          <tr>
+            <th class="th-cc">Cost Centre</th>
+            ${itemHeaders}
+            <th class="th-total">Total Budget</th>
+          </tr>
+        </thead>
+        <tbody>${dataRows}</tbody>
+        <tfoot>
+          <tr>
+            <td class="td-grand-label">Grand Total per Item</td>
+            ${grandCells}
+            <td class="td-grand td-total-col" style="font-weight:700">
+              ${grandTotal > 0 ? fmt(grandTotal) : '<span class="zero-val">—</span>'}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>`;
 }
 
-// ─── Item Cost per Headcount Tab ───────────────────────────────────────────────
-function ItemCostTab({ role, budgetItems, setBudgetItems }) {
-  const [showCreate, setShowCreate] = useState(false);
-  const [editTarget, setEditTarget] = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
+function fmt(val) {
+  return Number(val).toLocaleString('en-SG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
-  if (role !== 'finance' && role !== 'hr') {
-    return (
-      <div className="card" style={{borderRadius:6}}>
-        <div className="access-denied">
-          <div className="lock-icon">🔒</div>
-          <h3>Access Restricted</h3>
-          <p>This module is only accessible to <strong>Finance</strong> and <strong>HR Representatives</strong>.</p>
-        </div>
-      </div>
-    );
+/* ═══ SHARED MODAL HELPERS ═══ */
+function openModal(id) {
+  if (id === "createModal") {
+    ["newCode","newName","newDivision","newType"].forEach(f => {
+      document.getElementById(f).value = "";
+      document.getElementById(f).classList.remove("input-invalid");
+    });
+    document.getElementById("newHeadcount").checked = false;
+    document.querySelectorAll("#createModal .field-error").forEach(e => e.classList.remove("visible"));
   }
-
-  const handleCreate = (item)    => { setBudgetItems(items => [...items, { ...item, id: 'bi' + Date.now() }]); setShowCreate(false); };
-  const handleEdit   = (updated) => { setBudgetItems(items => items.map(i => i.id === updated.id ? updated : i)); setEditTarget(null); };
-  const handleDelete = ()        => { setBudgetItems(items => items.filter(i => i.id !== deleteTarget.id)); setDeleteTarget(null); };
-
-  const handleCostChange = (id, val) => {
-    const num = parseFloat(val);
-    setBudgetItems(items => items.map(i =>
-      i.id === id ? { ...i, costPerHeadcount: isNaN(num) || num < 0 ? 0 : num } : i
-    ));
-  };
-
-  return (
-    <>
-      <div className="section-divider">
-        <span>Item Cost per Headcount</span>
-        <span style={{fontSize:11, opacity:0.7, fontWeight:400, textTransform:'none', letterSpacing:0}}>Finance &amp; HR View</span>
-      </div>
-      <div className="card">
-        <div className="card-header">
-          <div className="card-header-left">
-            <div className="record-count">{budgetItems.length} item{budgetItems.length !== 1 ? 's' : ''}</div>
-          </div>
-          <button className="btn btn-primary" onClick={() => setShowCreate(true)}>✚ Add New Budget Item</button>
-        </div>
-        <div className="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th style={{width:40}}>#</th>
-                <th>Budget Item</th>
-                <th style={{textAlign:'right', width:200}}>Cost per Headcount ($)</th>
-                <th style={{textAlign:'center', width:140}}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {budgetItems.map((item, idx) => (
-                <tr key={item.id}>
-                  <td style={{color:'#9aaab8', fontWeight:600, fontSize:12}}>{idx + 1}</td>
-                  <td style={{fontWeight:500}}>{item.name}</td>
-                  <td style={{textAlign:'right'}}>
-                    <input type="number" min="0" step="0.01"
-                      value={item.costPerHeadcount}
-                      onChange={e => handleCostChange(item.id, e.target.value)}
-                      className="inline-num" style={{width:130}} />
-                  </td>
-                  <td style={{textAlign:'center'}}>
-                    <div className="action-btns" style={{justifyContent:'center'}}>
-                      <button className="btn btn-outline btn-sm" onClick={() => setEditTarget(item)}>✏️ Edit</button>
-                      <button className="btn btn-sm" style={{background:'#fef0f0', color:'#c0392b', border:'1.5px solid #f5b7b1'}} onClick={() => setDeleteTarget(item)}>🗑</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {showCreate  && <BudgetItemModal onSave={handleCreate} onClose={() => setShowCreate(false)} existingNames={budgetItems.map(i => i.name)} />}
-      {editTarget  && <BudgetItemModal initial={editTarget} onSave={handleEdit} onClose={() => setEditTarget(null)} existingNames={budgetItems.filter(i => i.id !== editTarget.id).map(i => i.name)} />}
-      {deleteTarget && (
-        <DeleteModal
-          title="Remove Budget Item"
-          message={`Are you sure you want to remove <strong>${deleteTarget.name}</strong>? This will also remove it from Budget Assumption calculations.`}
-          onConfirm={handleDelete}
-          onClose={() => setDeleteTarget(null)}
-        />
-      )}
-    </>
-  );
-}
-
-// ─── Budget Assumption Tab ─────────────────────────────────────────────────────
-function BudgetAssumptionTab({ role, costCentres, headcounts, budgetItems }) {
-  if (role !== 'finance' && role !== 'hr') {
-    return (
-      <div className="card" style={{borderRadius:6}}>
-        <div className="access-denied">
-          <div className="lock-icon">🔒</div>
-          <h3>Access Restricted</h3>
-          <p>This module is only accessible to <strong>Finance</strong> and <strong>HR Representatives</strong>.</p>
-        </div>
-      </div>
-    );
+  if (id === "budgetModal") {
+    document.getElementById("biName").value = "";
+    document.getElementById("biCost").value = "";
+    document.getElementById("biName").classList.remove("input-invalid");
+    document.getElementById("err-biName").classList.remove("visible");
   }
-
-  const hcCentres   = costCentres.filter(cc => cc.requiresHeadcount);
-  const cellVal     = (item, cc) => item.costPerHeadcount * (headcounts[cc.id] || 0);
-  const rowTotal    = (cc)       => budgetItems.reduce((s, item) => s + cellVal(item, cc), 0);
-  const colTotal    = (item)     => hcCentres.reduce((s, cc) => s + cellVal(item, cc), 0);
-  const grandTotal  = hcCentres.reduce((s, cc) => s + rowTotal(cc), 0);
-
-  return (
-    <>
-      <div className="metrics-row">
-        <div className="metric-card">
-          <div className="metric-label">Cost Centres</div>
-          <div className="metric-value">{hcCentres.length}</div>
-          <div className="metric-sub">With headcount</div>
-        </div>
-        <div className="metric-card yellow">
-          <div className="metric-label">Budget Items</div>
-          <div className="metric-value">{budgetItems.length}</div>
-          <div className="metric-sub">Line items</div>
-        </div>
-        <div className="metric-card">
-          <div className="metric-label">Grand Total Budget</div>
-          <div className="metric-value" style={{fontSize:20}}>{fmtMoney(grandTotal)}</div>
-          <div className="metric-sub">All centres &amp; items</div>
-        </div>
-      </div>
-
-      <div className="section-divider">
-        <span>Budget Assumption Matrix</span>
-        <span style={{fontSize:11, opacity:0.7, fontWeight:400, textTransform:'none', letterSpacing:0}}>Finance &amp; HR View</span>
-      </div>
-      <div className="card">
-        <div className="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th className="sticky-col" style={{minWidth:160}}>Cost Centre</th>
-                <th style={{textAlign:'right', minWidth:130, background:'#e8f0ff', color:'#0050a0'}}>Total Budget</th>
-                {budgetItems.map(item => (
-                  <th key={item.id} style={{textAlign:'right', minWidth:140}}>{item.name}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {hcCentres.length === 0 ? (
-                <tr><td colSpan={budgetItems.length + 2} style={{textAlign:'center', color:'#9aaab8', padding:'32px', fontSize:13}}>
-                  No cost centres with headcount configured. Go to Headcount tab to set values.
-                </td></tr>
-              ) : hcCentres.map(cc => (
-                <tr key={cc.id}>
-                  <td className="sticky-col">
-                    <div style={{fontWeight:700, color:'#001B5E', fontFamily:'monospace', fontSize:12}}>{cc.id}</div>
-                    <div style={{fontSize:12, color:'#555e6b', marginTop:1}}>{cc.name}</div>
-                    <div style={{fontSize:11, color:'#9aaab8', marginTop:1}}>HC: {headcounts[cc.id] || 0}</div>
-                  </td>
-                  <td style={{textAlign:'right', fontWeight:700, color:'#001B5E', background:'#f0f6ff'}}>
-                    {fmtMoney(rowTotal(cc))}
-                  </td>
-                  {budgetItems.map(item => (
-                    <td key={item.id} style={{textAlign:'right', color: cellVal(item,cc) === 0 ? '#c5cfe0' : '#2F3A4A'}}>
-                      {fmtMoney(cellVal(item, cc))}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-              {hcCentres.length > 0 && (
-                <tr className="total-row">
-                  <td className="sticky-col" style={{fontWeight:700, fontSize:13}}>Grand Total</td>
-                  <td style={{textAlign:'right', background:'#dceaff'}}>{fmtMoney(grandTotal)}</td>
-                  {budgetItems.map(item => (
-                    <td key={item.id} style={{textAlign:'right'}}>{fmtMoney(colTotal(item))}</td>
-                  ))}
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </>
-  );
+  document.getElementById(id).classList.add("open");
 }
 
-// ─── Dashboard Tab ─────────────────────────────────────────────────────────────
-function DashboardTab({ data }) {
-  const byDiv  = data.reduce((acc, cc) => { acc[cc.division] = (acc[cc.division]||0)+1; return acc; }, {});
-  const byType = data.reduce((acc, cc) => { acc[cc.type]     = (acc[cc.type]    ||0)+1; return acc; }, {});
-
-  return (
-    <>
-      <div className="metrics-row">
-        <div className="metric-card">
-          <div className="metric-label">Cost Centres</div>
-          <div className="metric-value">{data.length}</div>
-          <div className="metric-sub">Total registered</div>
-        </div>
-        <div className="metric-card yellow">
-          <div className="metric-label">Divisions</div>
-          <div className="metric-value">{Object.keys(byDiv).length}</div>
-          <div className="metric-sub">Active divisions</div>
-        </div>
-        <div className="metric-card">
-          <div className="metric-label">Revenue Centres</div>
-          <div className="metric-value">{byType['Revenue']||0}</div>
-          <div className="metric-sub">Revenue generating</div>
-        </div>
-        <div className="metric-card">
-          <div className="metric-label">Headcount Required</div>
-          <div className="metric-value">{data.filter(cc=>cc.requiresHeadcount).length}</div>
-          <div className="metric-sub">Cost centres</div>
-        </div>
-      </div>
-
-      <div className="section-divider" style={{borderRadius:'4px 4px 0 0'}}>
-        <span>Division Breakdown</span>
-      </div>
-      <div className="card" style={{padding:'20px', borderRadius:'0 0 6px 6px', marginBottom:20}}>
-        <div style={{display:'flex', flexWrap:'wrap', gap:12}}>
-          {Object.entries(byDiv).sort((a,b)=>b[1]-a[1]).map(([div, count]) => (
-            <div key={div} style={{background:'#f0f4ff', border:'1px solid #cdd8f0', borderRadius:6, padding:'12px 18px', minWidth:100, textAlign:'center'}}>
-              <div style={{fontSize:22, fontWeight:700, color:'#001B5E'}}>{count}</div>
-              <div style={{fontSize:11, fontWeight:700, color:'#0087E6', textTransform:'uppercase', letterSpacing:0.5, marginTop:2}}>{div}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="section-divider" style={{borderRadius:'4px 4px 0 0'}}>
-        <span>Type Distribution</span>
-      </div>
-      <div className="card" style={{padding:'20px', borderRadius:'0 0 6px 6px'}}>
-        <div style={{display:'flex', gap:16, flexWrap:'wrap'}}>
-          {Object.entries(byType).map(([type, count]) => (
-            <div key={type} style={{display:'flex', alignItems:'center', gap:12, background:'#fafbfd', border:'1px solid #edf0f4', borderRadius:6, padding:'12px 18px', flex:1, minWidth:140}}>
-              <div style={{fontSize:28, fontWeight:700, color:'#001B5E'}}>{count}</div>
-              <div>
-                <TypeBadge type={type} />
-                <div style={{fontSize:11, color:'#6b7a8d', marginTop:4}}>{Math.round(count/data.length*100)}% of total</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </>
-  );
+function closeModal(id) {
+  document.getElementById(id).classList.remove("open");
 }
 
-// ─── Placeholder Tab ───────────────────────────────────────────────────────────
-function PlaceholderTab({ label, icon }) {
-  return (
-    <div className="card" style={{borderRadius:6}}>
-      <div className="coming-soon">
-        <div className="cs-icon">{icon}</div>
-        <h3>{label}</h3>
-        <p>This module is under development and will be available in a future release.</p>
-      </div>
-    </div>
-  );
+document.querySelectorAll(".modal-overlay").forEach(overlay => {
+  overlay.addEventListener("click", function(e) {
+    if (e.target === this) closeModal(this.id);
+  });
+});
+
+/* ═══ ACCESS DENIED TEMPLATE ═══ */
+function accessDenied(tabName, allowedRoles) {
+  return `
+    <div class="access-denied">
+      <svg width="58" height="58" fill="none" viewBox="0 0 24 24" stroke="#c8cfd8" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+      </svg>
+      <h3>Access Restricted</h3>
+      <p>The <strong>${esc(tabName)}</strong> tab is only accessible to <strong>${esc(allowedRoles)}</strong>.<br>
+         Please switch your role to continue.</p>
+    </div>`;
 }
 
-// ─── App ───────────────────────────────────────────────────────────────────────
-function App() {
-  const [role,         setRole]         = useState('finance');
-  const [activeTab,    setActiveTab]    = useState('dashboard');
-  const [costCentres,  setCostCentres]  = useState(INITIAL_COST_CENTRES);
-  const [headcounts,   setHeadcounts]   = useState({});
-  const [budgetItems,  setBudgetItems]  = useState(INITIAL_BUDGET_ITEMS);
-
-  const PAGE_TITLES = {
-    'dashboard':          { title: 'Dashboard',           breadcrumb: 'Overview' },
-    'cost-centre':        { title: 'Cost Centre',         breadcrumb: 'Administration' },
-    'headcount':          { title: 'Headcount',           breadcrumb: 'Administration' },
-    'employees':          { title: 'Employees',           breadcrumb: 'Administration' },
-    'branches':           { title: 'Branches',            breadcrumb: 'Administration' },
-    'item-cost':          { title: 'Cost per Headcount',  breadcrumb: 'Budgeting' },
-    'budget-assumption':  { title: 'Budget Assumption',   breadcrumb: 'Budgeting' },
-    'budget-plan':        { title: 'Budget Plan',         breadcrumb: 'Budgeting' },
-    'allocations':        { title: 'Allocations',         breadcrumb: 'Budgeting' },
-    'reports':            { title: 'Reports',             breadcrumb: 'Budgeting' },
-  };
-
-  const { title, breadcrumb } = PAGE_TITLES[activeTab] || { title: activeTab, breadcrumb: '' };
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'dashboard':         return <DashboardTab data={costCentres} />;
-      case 'cost-centre':       return <CostCentreTab role={role} data={costCentres} setData={setCostCentres} />;
-      case 'headcount':         return <HeadcountTab costCentres={costCentres} headcounts={headcounts} setHeadcounts={setHeadcounts} />;
-      case 'employees':         return <PlaceholderTab label="Employees" icon="👥" />;
-      case 'branches':          return <PlaceholderTab label="Branches" icon="🏦" />;
-      case 'item-cost':         return <ItemCostTab role={role} budgetItems={budgetItems} setBudgetItems={setBudgetItems} />;
-      case 'budget-assumption': return <BudgetAssumptionTab role={role} costCentres={costCentres} headcounts={headcounts} budgetItems={budgetItems} />;
-      case 'budget-plan':       return <PlaceholderTab label="Budget Plan" icon="📋" />;
-      case 'allocations':       return <PlaceholderTab label="Allocations" icon="💰" />;
-      case 'reports':           return <PlaceholderTab label="Reports" icon="📈" />;
-      default:                  return null;
-    }
-  };
-
-  return (
-    <div className="app-wrapper">
-      {/* Sidebar */}
-      <div className="sidebar">
-        <div className="sidebar-logo">
-          <h2>Central Budgeting Fund</h2>
-          <span>Management System</span>
-        </div>
-        <nav className="sidebar-nav">
-          {NAV.map(section => (
-            <div key={section.section}>
-              <div className="nav-section-label">{section.section}</div>
-              {section.items.map(item => (
-                <div
-                  key={item.key}
-                  className={`nav-item ${activeTab === item.key ? 'active' : ''}`}
-                  onClick={() => setActiveTab(item.key)}
-                >
-                  <span className="nav-icon">{item.icon}</span>
-                  <span className="nav-label">{item.label}</span>
-                  {item.badge && (
-                    <span className="nav-badge" style={item.badgeStyle}>{item.badge}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
-        </nav>
-        <div className="sidebar-footer">
-          <div className="role-badge">
-            <label>Active Role</label>
-            <select value={role} onChange={e => setRole(e.target.value)}>
-              <option value="finance">Finance Rep</option>
-              <option value="hr">HR Rep</option>
-              <option value="branch">Branch Rep</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Main */}
-      <div className="main-content">
-        <div className="top-bar">
-          <div>
-            <div className="breadcrumb">{breadcrumb}</div>
-            <h1>{title}</h1>
-          </div>
-          <div className="user-info">
-            <div className="user-avatar">{ROLE_INITIALS[role]}</div>
-            <span>{ROLE_LABELS[role]}</span>
-          </div>
-        </div>
-        <div className="page-area">
-          {renderContent()}
-        </div>
-      </div>
-    </div>
-  );
+/* ═══ TOAST ═══ */
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 2800);
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+/* ═══ UTIL ═══ */
+function esc(str) {
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
+}
+
+/* ═══ INIT ═══ */
+render();
 </script>
 </body>
 </html>
