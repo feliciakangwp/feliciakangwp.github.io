@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Central Budgeting Fund</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #FFFFFF; color: #2F3A4A; min-height: 100vh; }
+
+    /* Layout */
+    .app-wrapper { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar { width: 220px; background: #001B5E; display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-logo { padding: 24px 20px 16px; border-bottom: 2px solid #0087E6; }
+    .sidebar-logo h2 { color: #FFFFFF; font-size: 13px; font-weight: 700; line-height: 1.4; letter-spacing: 0.5px; text-transform: uppercase; }
+    .sidebar-logo span { color: #F2C94C; font-size: 11px; display: block; margin-top: 2px; }
+    .sidebar-nav { flex: 1; padding: 12px 0; }
+    .nav-section-label { color: #0087E6; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; padding: 12px 20px 4px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; cursor: pointer; color: #FFFFFF; font-size: 13px; transition: background 0.15s; border-left: 3px solid transparent; }
+    .nav-item:hover { background: rgba(0,135,230,0.15); }
+    .nav-item.active { background: rgba(0,135,230,0.25); border-left-color: #0087E6; color: #FFFFFF; font-weight: 600; }
+    .nav-item .nav-icon { width: 18px; text-align: center; font-size: 15px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .role-badge { background: rgba(242,201,76,0.15); border: 1px solid #F2C94C; border-radius: 4px; padding: 6px 10px; }
+    .role-badge label { color: #F2C94C; font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; display: block; margin-bottom: 4px; }
+    .role-badge select { background: transparent; border: none; color: #FFFFFF; font-size: 12px; width: 100%; cursor: pointer; outline: none; }
+    .role-badge select option { background: #001B5E; color: #FFFFFF; }
+
+    /* Main content */
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .top-bar { background: #001B5E; padding: 0 28px; height: 56px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0087E6; }
+    .top-bar h1 { color: #FFFFFF; font-size: 17px; font-weight: 700; letter-spacing: 0.3px; }
+    .top-bar .breadcrumb { color: rgba(255,255,255,0.55); font-size: 12px; }
+    .top-bar .user-info { display: flex; align-items: center; gap: 8px; color: #FFFFFF; font-size: 13px; }
+    .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: #F2C94C; color: #001B5E; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+
+    .page-area { flex: 1; padding: 28px; overflow-y: auto; background: #f4f6f9; }
+
+    /* Section divider */
+    .section-divider { background: #001B5E; color: #FFFFFF; padding: 8px 16px; font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: space-between; }
+
+    /* Card */
+    .card { background: #FFFFFF; border-radius: 0 0 6px 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .card-header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e8ecf0; }
+    .card-header-left { display: flex; align-items: center; gap: 12px; }
+    .record-count { background: #f0f4ff; color: #001B5E; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 12px; border: 1px solid #cdd8f0; }
+
+    /* Buttons */
+    .btn { padding: 9px 18px; border-radius: 5px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: #001B5E; color: #FFFFFF; }
+    .btn-primary:hover { background: #002d9a; }
+    .btn-accent { background: #0087E6; color: #FFFFFF; }
+    .btn-accent:hover { background: #006bbf; }
+    .btn-outline { background: transparent; color: #001B5E; border: 1.5px solid #001B5E; }
+    .btn-outline:hover { background: #f0f4ff; }
+    .btn-danger { background: #dc3545; color: #FFFFFF; }
+    .btn-danger:hover { background: #b02a37; }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Table */
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: #f8f9fb; }
+    th { text-align: left; padding: 11px 16px; font-size: 12px; font-weight: 700; color: #001B5E; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 2px solid #0087E6; white-space: nowrap; }
+    td { padding: 12px 16px; font-size: 13px; color: #2F3A4A; border-bottom: 1px solid #edf0f4; }
+    tr:hover td { background: #f5f8ff; }
+    tr:last-child td { border-bottom: none; }
+    .col-cc { font-weight: 700; color: #001B5E; font-family: monospace; font-size: 13px; }
+
+    /* Badges */
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+    .badge-admin { background: #e8f4fd; color: #0087E6; border: 1px solid #b3d9f7; }
+    .badge-revenue { background: #fff8e6; color: #b8860b; border: 1px solid #f2c94c; }
+    .badge-preventive { background: #edfaf3; color: #1a7a45; border: 1px solid #a3dfc0; }
+    .badge-yes { background: #edfaf3; color: #1a7a45; border: 1px solid #a3dfc0; font-size: 11px; padding: 3px 8px; border-radius: 10px; }
+    .badge-no { background: #fef0f0; color: #c0392b; border: 1px solid #f5b7b1; font-size: 11px; padding: 3px 8px; border-radius: 10px; }
+
+    /* Action buttons in table */
+    .action-btns { display: flex; gap: 6px; }
+
+    /* Access denied */
+    .access-denied { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 64px 32px; text-align: center; gap: 12px; }
+    .access-denied .lock-icon { font-size: 48px; opacity: 0.3; }
+    .access-denied h3 { color: #001B5E; font-size: 18px; }
+    .access-denied p { color: #6b7a8d; font-size: 14px; max-width: 300px; }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal { background: #FFFFFF; border-radius: 8px; width: 100%; max-width: 520px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); overflow: hidden; }
+    .modal-header { background: #001B5E; padding: 16px 22px; display: flex; align-items: center; justify-content: space-between; }
+    .modal-header h3 { color: #FFFFFF; font-size: 15px; font-weight: 700; }
+    .modal-header .accent-line { width: 36px; height: 3px; background: #0087E6; border-radius: 2px; margin-top: 4px; }
+    .modal-close { color: rgba(255,255,255,0.7); cursor: pointer; font-size: 20px; background: none; border: none; line-height: 1; transition: color 0.15s; }
+    .modal-close:hover { color: #FFFFFF; }
+    .modal-body { padding: 24px 22px; }
+    .modal-footer { padding: 14px 22px; border-top: 1px solid #edf0f4; display: flex; justify-content: flex-end; gap: 10px; background: #fafbfd; }
+
+    /* Form */
+    .form-group { margin-bottom: 18px; }
+    .form-label { display: block; font-size: 12px; font-weight: 700; color: #001B5E; letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 6px; }
+    .form-label .required { color: #dc3545; margin-left: 2px; }
+    .form-control { width: 100%; padding: 9px 12px; border: 1.5px solid #d1d9e0; border-radius: 5px; font-size: 13px; color: #2F3A4A; background: #FFFFFF; outline: none; transition: border-color 0.15s; }
+    .form-control:focus { border-color: #0087E6; box-shadow: 0 0 0 3px rgba(0,135,230,0.1); }
+    .form-control.error { border-color: #dc3545; }
+    .form-error { color: #dc3545; font-size: 11px; margin-top: 4px; }
+    .checkbox-group { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1.5px solid #d1d9e0; border-radius: 5px; cursor: pointer; transition: border-color 0.15s; }
+    .checkbox-group:hover { border-color: #0087E6; background: #f5f8ff; }
+    .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #0087E6; }
+    .checkbox-group label { font-size: 13px; color: #2F3A4A; cursor: pointer; }
+
+    /* Metric cards */
+    .metrics-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .metric-card { background: #FFFFFF; border-radius: 6px; padding: 16px 20px; flex: 1; min-width: 140px; box-shadow: 0 2px 6px rgba(0,0,0,0.07); border-top: 3px solid #0087E6; }
+    .metric-card.yellow { border-top-color: #F2C94C; }
+    .metric-card .metric-label { font-size: 11px; font-weight: 700; color: #6b7a8d; text-transform: uppercase; letter-spacing: 0.6px; }
+    .metric-card .metric-value { font-size: 28px; font-weight: 700; color: #001B5E; line-height: 1.2; margin-top: 4px; }
+    .metric-card .metric-sub { font-size: 11px; color: #6b7a8d; margin-top: 2px; }
+
+    /* Search bar */
+    .search-bar { position: relative; }
+    .search-bar input { padding: 8px 12px 8px 34px; border: 1.5px solid #d1d9e0; border-radius: 5px; font-size: 13px; color: #2F3A4A; outline: none; width: 220px; }
+    .search-bar input:focus { border-color: #0087E6; }
+    .search-bar .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9aaab8; font-size: 14px; }
+
+    /* Coming soon placeholder */
+    .coming-soon { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 32px; gap: 12px; text-align: center; }
+    .coming-soon .cs-icon { font-size: 52px; opacity: 0.2; }
+    .coming-soon h3 { color: #001B5E; font-size: 18px; }
+    .coming-soon p { color: #6b7a8d; font-size: 13px; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f0f4f8; }
+    ::-webkit-scrollbar-thumb { background: #c5cfe0; border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const { useState, useCallback } = React;
+
+// ─── Initial Data ────────────────────────────────────────────────────────────
+const DIVISIONS = ['OTM','HRD','CPD','CD','TD','I&I','ITD'];
+const TYPES = ['Admin','Revenue','Preventive'];
+
+const DIVISION_DEFAULT = {
+  '100100': 'HRD', '100102': 'OTM', '100103': 'OTM', '100104': 'OTM',
+  '100105': 'HRD', '100106': 'HRD', '100107': 'CPD', '100108': 'CD',
+  '100109': 'TD',  '100110': 'CPD', '100111': 'CD',  '100112': 'ITD',
+  '100113': 'OTM', '100114': 'TD',  '100115': 'TD',  '100116': 'I&I',
+  '100117': 'I&I', '100118': 'ITD', '100119': 'ITD',
+};
+const TYPE_DEFAULT = {
+  '100100': 'Admin','100102': 'Revenue','100103': 'Revenue','100104': 'Revenue',
+  '100105': 'Admin','100106': 'Admin',  '100107': 'Revenue','100108': 'Revenue',
+  '100109': 'Revenue','100110': 'Revenue','100111': 'Revenue','100112': 'Admin',
+  '100113': 'Admin','100114': 'Revenue','100115': 'Revenue','100116': 'Preventive',
+  '100117': 'Preventive','100118': 'Admin','100119': 'Admin',
+};
+
+const INITIAL_COST_CENTRES = [
+  {id:'100100', name:'Finance'},      {id:'100102', name:'D2B'},
+  {id:'100103', name:'ASB'},          {id:'100104', name:'ALB'},
+  {id:'100105', name:'Learning & Dev'},{id:'100106', name:'HR'},
+  {id:'100107', name:'LCOB'},         {id:'100108', name:'ACB'},
+  {id:'100109', name:'SCB'},          {id:'100110', name:'PCB'},
+  {id:'100111', name:'CCAB'},         {id:'100112', name:'SLMB'},
+  {id:'100113', name:'PSB'},          {id:'100114', name:'TTSB'},
+  {id:'100115', name:'TSDB'},         {id:'100116', name:'Dev of Station'},
+  {id:'100117', name:'Trial Space'},  {id:'100118', name:'IB'},
+  {id:'100119', name:'SIB'},
+].map(cc => ({
+  ...cc,
+  division: DIVISION_DEFAULT[cc.id] || 'OTM',
+  type: TYPE_DEFAULT[cc.id] || 'Admin',
+  requiresHeadcount: ['100102','100103','100104','100107','100108','100109','100110','100111','100114','100115'].includes(cc.id),
+}));
+
+// ─── Nav Config ──────────────────────────────────────────────────────────────
+const NAV = [
+  { section: 'Overview', items: [
+    { key: 'dashboard', label: 'Dashboard', icon: '📊' },
+  ]},
+  { section: 'Administration', items: [
+    { key: 'cost-centre', label: 'Cost Centre', icon: '🏢', financeOnly: true },
+    { key: 'employees',   label: 'Employees',   icon: '👥', hrOnly: true },
+    { key: 'branches',    label: 'Branches',    icon: '🏦', branchOnly: true },
+  ]},
+  { section: 'Budgeting', items: [
+    { key: 'budget-plan',  label: 'Budget Plan',  icon: '📋' },
+    { key: 'allocations',  label: 'Allocations',  icon: '💰' },
+    { key: 'reports',      label: 'Reports',      icon: '📈' },
+  ]},
+];
+
+const ROLE_LABELS = { finance: 'Finance Rep', hr: 'HR Rep', branch: 'Branch Rep' };
+const ROLE_INITIALS = { finance: 'FR', hr: 'HR', branch: 'BR' };
+
+// ─── Type Badge ──────────────────────────────────────────────────────────────
+function TypeBadge({ type }) {
+  const cls = { Admin: 'badge-admin', Revenue: 'badge-revenue', Preventive: 'badge-preventive' }[type] || 'badge-admin';
+  return <span className={`badge ${cls}`}>{type}</span>;
+}
+
+// ─── Modal: Create / Edit Cost Centre ────────────────────────────────────────
+function CostCentreModal({ initial, onSave, onClose, existingIds }) {
+  const isEdit = !!initial;
+  const [form, setForm] = useState(initial || { id:'', name:'', division: DIVISIONS[0], type: TYPES[0], requiresHeadcount: false });
+  const [errors, setErrors] = useState({});
+
+  const set = (field, val) => { setForm(f => ({...f, [field]: val})); setErrors(e => ({...e, [field]: ''})); };
+
+  const validate = () => {
+    const e = {};
+    if (!form.id.trim()) e.id = 'Cost Centre code is required';
+    else if (!/^\d{6}$/.test(form.id.trim())) e.id = 'Must be a 6-digit number';
+    else if (!isEdit && existingIds.includes(form.id.trim())) e.id = 'This code already exists';
+    if (!form.name.trim()) e.name = 'Name is required';
+    return e;
+  };
+
+  const handleSave = () => {
+    const e = validate();
+    if (Object.keys(e).length) { setErrors(e); return; }
+    onSave({ ...form, id: form.id.trim(), name: form.name.trim() });
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <div className="modal-header">
+          <div>
+            <h3>{isEdit ? 'Edit Cost Centre' : 'Create New Cost Centre'}</h3>
+            <div className="accent-line" />
+          </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <div className="form-group">
+            <label className="form-label">Cost Centre Code <span className="required">*</span></label>
+            <input
+              className={`form-control ${errors.id ? 'error' : ''}`}
+              placeholder="e.g. 100120"
+              value={form.id}
+              onChange={e => set('id', e.target.value)}
+              disabled={isEdit}
+              maxLength={6}
+            />
+            {errors.id && <div className="form-error">{errors.id}</div>}
+          </div>
+          <div className="form-group">
+            <label className="form-label">Name <span className="required">*</span></label>
+            <input
+              className={`form-control ${errors.name ? 'error' : ''}`}
+              placeholder="e.g. Operations"
+              value={form.name}
+              onChange={e => set('name', e.target.value)}
+            />
+            {errors.name && <div className="form-error">{errors.name}</div>}
+          </div>
+          <div className="form-group">
+            <label className="form-label">Division <span className="required">*</span></label>
+            <select className="form-control" value={form.division} onChange={e => set('division', e.target.value)}>
+              {DIVISIONS.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Type <span className="required">*</span></label>
+            <select className="form-control" value={form.type} onChange={e => set('type', e.target.value)}>
+              {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Requires Headcount</label>
+            <div className="checkbox-group" onClick={() => set('requiresHeadcount', !form.requiresHeadcount)}>
+              <input
+                type="checkbox"
+                checked={form.requiresHeadcount}
+                onChange={() => set('requiresHeadcount', !form.requiresHeadcount)}
+                onClick={e => e.stopPropagation()}
+              />
+              <label>{form.requiresHeadcount ? 'Yes — headcount required for this cost centre' : 'No — headcount not required'}</label>
+            </div>
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-outline" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={handleSave}>
+            {isEdit ? '💾 Save Changes' : '✚ Create Cost Centre'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Confirm Delete Modal ─────────────────────────────────────────────────────
+function DeleteModal({ cc, onConfirm, onClose }) {
+  return (
+    <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal" style={{maxWidth: 420}}>
+        <div className="modal-header" style={{background:'#b02a37'}}>
+          <div>
+            <h3>Delete Cost Centre</h3>
+            <div className="accent-line" style={{background:'#f5b7b1'}} />
+          </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <p style={{fontSize:14, lineHeight:1.6}}>
+            Are you sure you want to delete <strong>{cc.id} — {cc.name}</strong>?
+            This action cannot be undone.
+          </p>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-outline" onClick={onClose}>Cancel</button>
+          <button className="btn btn-danger" onClick={onConfirm}>Delete</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Cost Centre Tab ──────────────────────────────────────────────────────────
+function CostCentreTab({ role, data, setData }) {
+  const [showCreate, setShowCreate] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [search, setSearch] = useState('');
+
+  if (role !== 'finance') {
+    return (
+      <div className="card" style={{borderRadius:6}}>
+        <div className="access-denied">
+          <div className="lock-icon">🔒</div>
+          <h3>Access Restricted</h3>
+          <p>The Cost Centre module is only accessible to <strong>Finance Representatives</strong>. Please contact your Finance Rep for assistance.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const filtered = data.filter(cc =>
+    cc.id.includes(search) ||
+    cc.name.toLowerCase().includes(search.toLowerCase()) ||
+    cc.division.toLowerCase().includes(search.toLowerCase()) ||
+    cc.type.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleCreate = (newCC) => {
+    setData(d => [...d, newCC]);
+    setShowCreate(false);
+  };
+
+  const handleEdit = (updated) => {
+    setData(d => d.map(cc => cc.id === updated.id ? updated : cc));
+    setEditTarget(null);
+  };
+
+  const handleDelete = () => {
+    setData(d => d.filter(cc => cc.id !== deleteTarget.id));
+    setDeleteTarget(null);
+  };
+
+  const typeCounts = data.reduce((acc, cc) => { acc[cc.type] = (acc[cc.type]||0)+1; return acc; }, {});
+  const hcCount = data.filter(cc => cc.requiresHeadcount).length;
+
+  return (
+    <>
+      {/* Metrics */}
+      <div className="metrics-row">
+        <div className="metric-card">
+          <div className="metric-label">Total Cost Centres</div>
+          <div className="metric-value">{data.length}</div>
+          <div className="metric-sub">All active records</div>
+        </div>
+        <div className="metric-card yellow">
+          <div className="metric-label">Requires Headcount</div>
+          <div className="metric-value">{hcCount}</div>
+          <div className="metric-sub">of {data.length} cost centres</div>
+        </div>
+        <div className="metric-card">
+          <div className="metric-label">Revenue Centres</div>
+          <div className="metric-value">{typeCounts['Revenue']||0}</div>
+          <div className="metric-sub">Type: Revenue</div>
+        </div>
+        <div className="metric-card">
+          <div className="metric-label">Admin Centres</div>
+          <div className="metric-value">{typeCounts['Admin']||0}</div>
+          <div className="metric-sub">Type: Admin</div>
+        </div>
+      </div>
+
+      {/* Table card */}
+      <div className="section-divider">
+        <span>Cost Centre Registry</span>
+        <span style={{fontSize:11, opacity:0.7, fontWeight:400, textTransform:'none', letterSpacing:0}}>Finance View</span>
+      </div>
+      <div className="card">
+        <div className="card-header">
+          <div className="card-header-left">
+            <div className="search-bar">
+              <span className="search-icon">🔍</span>
+              <input
+                placeholder="Search cost centres…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="record-count">{filtered.length} record{filtered.length !== 1 ? 's' : ''}</div>
+          </div>
+          <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
+            ✚ Create New Cost Centre
+          </button>
+        </div>
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Cost Centre</th>
+                <th>Name</th>
+                <th>Division</th>
+                <th>Type</th>
+                <th style={{textAlign:'center'}}>Requires Headcount</th>
+                <th style={{textAlign:'center'}}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{textAlign:'center', color:'#9aaab8', padding:'32px', fontSize:13}}>
+                    No cost centres match your search.
+                  </td>
+                </tr>
+              ) : filtered.map(cc => (
+                <tr key={cc.id}>
+                  <td className="col-cc">{cc.id}</td>
+                  <td style={{fontWeight:500}}>{cc.name}</td>
+                  <td><span style={{background:'#f0f4ff', color:'#001B5E', fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:12, border:'1px solid #cdd8f0', letterSpacing:0.4}}>{cc.division}</span></td>
+                  <td><TypeBadge type={cc.type} /></td>
+                  <td style={{textAlign:'center'}}>
+                    <span className={cc.requiresHeadcount ? 'badge-yes' : 'badge-no'}>
+                      {cc.requiresHeadcount ? '✓ Yes' : '✗ No'}
+                    </span>
+                  </td>
+                  <td style={{textAlign:'center'}}>
+                    <div className="action-btns" style={{justifyContent:'center'}}>
+                      <button className="btn btn-outline btn-sm" onClick={() => setEditTarget(cc)}>✏️ Edit</button>
+                      <button className="btn btn-sm" style={{background:'#fef0f0', color:'#c0392b', border:'1.5px solid #f5b7b1'}} onClick={() => setDeleteTarget(cc)}>🗑</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showCreate && (
+        <CostCentreModal
+          onSave={handleCreate}
+          onClose={() => setShowCreate(false)}
+          existingIds={data.map(cc => cc.id)}
+        />
+      )}
+      {editTarget && (
+        <CostCentreModal
+          initial={editTarget}
+          onSave={handleEdit}
+          onClose={() => setEditTarget(null)}
+          existingIds={data.map(cc => cc.id)}
+        />
+      )}
+      {deleteTarget && (
+        <DeleteModal
+          cc={deleteTarget}
+          onConfirm={handleDelete}
+          onClose={() => setDeleteTarget(null)}
+        />
+      )}
+    </>
+  );
+}
+
+// ─── Dashboard Tab ────────────────────────────────────────────────────────────
+function DashboardTab({ role, data }) {
+  const byDiv = data.reduce((acc, cc) => { acc[cc.division] = (acc[cc.division]||0)+1; return acc; }, {});
+  const byType = data.reduce((acc, cc) => { acc[cc.type] = (acc[cc.type]||0)+1; return acc; }, {});
+
+  return (
+    <>
+      <div className="metrics-row">
+        <div className="metric-card">
+          <div className="metric-label">Cost Centres</div>
+          <div className="metric-value">{data.length}</div>
+          <div className="metric-sub">Total registered</div>
+        </div>
+        <div className="metric-card yellow">
+          <div className="metric-label">Divisions</div>
+          <div className="metric-value">{Object.keys(byDiv).length}</div>
+          <div className="metric-sub">Active divisions</div>
+        </div>
+        <div className="metric-card">
+          <div className="metric-label">Revenue Centres</div>
+          <div className="metric-value">{byType['Revenue']||0}</div>
+          <div className="metric-sub">Revenue generating</div>
+        </div>
+        <div className="metric-card">
+          <div className="metric-label">Headcount Required</div>
+          <div className="metric-value">{data.filter(cc=>cc.requiresHeadcount).length}</div>
+          <div className="metric-sub">Cost centres</div>
+        </div>
+      </div>
+
+      <div className="section-divider" style={{borderRadius:'4px 4px 0 0'}}>
+        <span>Division Breakdown</span>
+      </div>
+      <div className="card" style={{padding:'20px', borderRadius:'0 0 6px 6px', marginBottom:20}}>
+        <div style={{display:'flex', flexWrap:'wrap', gap:12}}>
+          {Object.entries(byDiv).sort((a,b)=>b[1]-a[1]).map(([div, count]) => (
+            <div key={div} style={{background:'#f0f4ff', border:'1px solid #cdd8f0', borderRadius:6, padding:'12px 18px', minWidth:100, textAlign:'center'}}>
+              <div style={{fontSize:22, fontWeight:700, color:'#001B5E'}}>{count}</div>
+              <div style={{fontSize:11, fontWeight:700, color:'#0087E6', textTransform:'uppercase', letterSpacing:0.5, marginTop:2}}>{div}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="section-divider" style={{borderRadius:'4px 4px 0 0'}}>
+        <span>Type Distribution</span>
+      </div>
+      <div className="card" style={{padding:'20px', borderRadius:'0 0 6px 6px'}}>
+        <div style={{display:'flex', gap:16, flexWrap:'wrap'}}>
+          {Object.entries(byType).map(([type, count]) => (
+            <div key={type} style={{display:'flex', alignItems:'center', gap:12, background:'#fafbfd', border:'1px solid #edf0f4', borderRadius:6, padding:'12px 18px', flex:1, minWidth:140}}>
+              <div style={{fontSize:28, fontWeight:700, color:'#001B5E'}}>{count}</div>
+              <div>
+                <TypeBadge type={type} />
+                <div style={{fontSize:11, color:'#6b7a8d', marginTop:4}}>{Math.round(count/data.length*100)}% of total</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Placeholder Tab ──────────────────────────────────────────────────────────
+function PlaceholderTab({ label, icon }) {
+  return (
+    <div className="card" style={{borderRadius:6}}>
+      <div className="coming-soon">
+        <div className="cs-icon">{icon}</div>
+        <h3>{label}</h3>
+        <p>This module is under development and will be available in a future release.</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── App ──────────────────────────────────────────────────────────────────────
+function App() {
+  const [role, setRole] = useState('finance');
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [costCentres, setCostCentres] = useState(INITIAL_COST_CENTRES);
+
+  const PAGE_TITLES = {
+    'dashboard':    { title: 'Dashboard',   breadcrumb: 'Overview' },
+    'cost-centre':  { title: 'Cost Centre', breadcrumb: 'Administration' },
+    'employees':    { title: 'Employees',   breadcrumb: 'Administration' },
+    'branches':     { title: 'Branches',    breadcrumb: 'Administration' },
+    'budget-plan':  { title: 'Budget Plan', breadcrumb: 'Budgeting' },
+    'allocations':  { title: 'Allocations', breadcrumb: 'Budgeting' },
+    'reports':      { title: 'Reports',     breadcrumb: 'Budgeting' },
+  };
+
+  const { title, breadcrumb } = PAGE_TITLES[activeTab] || { title: activeTab, breadcrumb: '' };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':   return <DashboardTab role={role} data={costCentres} />;
+      case 'cost-centre': return <CostCentreTab role={role} data={costCentres} setData={setCostCentres} />;
+      case 'employees':   return <PlaceholderTab label="Employees" icon="👥" />;
+      case 'branches':    return <PlaceholderTab label="Branches" icon="🏦" />;
+      case 'budget-plan': return <PlaceholderTab label="Budget Plan" icon="📋" />;
+      case 'allocations': return <PlaceholderTab label="Allocations" icon="💰" />;
+      case 'reports':     return <PlaceholderTab label="Reports" icon="📈" />;
+      default:            return null;
+    }
+  };
+
+  return (
+    <div className="app-wrapper">
+      {/* Sidebar */}
+      <div className="sidebar">
+        <div className="sidebar-logo">
+          <h2>Central Budgeting Fund</h2>
+          <span>Management System</span>
+        </div>
+        <nav className="sidebar-nav">
+          {NAV.map(section => (
+            <div key={section.section}>
+              <div className="nav-section-label">{section.section}</div>
+              {section.items.map(item => (
+                <div
+                  key={item.key}
+                  className={`nav-item ${activeTab === item.key ? 'active' : ''}`}
+                  onClick={() => setActiveTab(item.key)}
+                >
+                  <span className="nav-icon">{item.icon}</span>
+                  <span>{item.label}</span>
+                  {item.financeOnly && (
+                    <span style={{marginLeft:'auto', fontSize:9, background:'rgba(0,135,230,0.2)', color:'#0087E6', padding:'2px 5px', borderRadius:3, fontWeight:700, letterSpacing:0.3}}>FIN</span>
+                  )}
+                  {item.hrOnly && (
+                    <span style={{marginLeft:'auto', fontSize:9, background:'rgba(242,201,76,0.2)', color:'#F2C94C', padding:'2px 5px', borderRadius:3, fontWeight:700, letterSpacing:0.3}}>HR</span>
+                  )}
+                  {item.branchOnly && (
+                    <span style={{marginLeft:'auto', fontSize:9, background:'rgba(255,255,255,0.15)', color:'rgba(255,255,255,0.7)', padding:'2px 5px', borderRadius:3, fontWeight:700, letterSpacing:0.3}}>BR</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          <div className="role-badge">
+            <label>Active Role</label>
+            <select value={role} onChange={e => setRole(e.target.value)}>
+              <option value="finance">Finance Rep</option>
+              <option value="hr">HR Rep</option>
+              <option value="branch">Branch Rep</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Main */}
+      <div className="main-content">
+        <div className="top-bar">
+          <div>
+            <div className="breadcrumb">{breadcrumb}</div>
+            <h1>{title}</h1>
+          </div>
+          <div className="user-info">
+            <div className="user-avatar">{ROLE_INITIALS[role]}</div>
+            <span>{ROLE_LABELS[role]}</span>
+          </div>
+        </div>
+        <div className="page-area">
+          {renderContent()}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
