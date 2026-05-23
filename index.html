@@ -480,6 +480,19 @@
     }
 
     .grand-total-card { border-left-color: var(--accent) !important; }
+
+    /* ── SWF Assumption ── */
+    .ref-section { background:#fff; border:1px solid #e2e8f0; border-top:none; border-radius:0 0 7px 7px; padding:18px 20px; margin-bottom:26px; }
+    .ref-grid { display:flex; gap:14px; flex-wrap:wrap; }
+    .ref-card { flex:1; min-width:160px; }
+    .ref-card > label { display:block; font-size:11px; font-weight:700; color:var(--header); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; }
+    .ref-input-wrap { display:flex; align-items:center; }
+    .ref-prefix { background:#f0f2f7; border:1px solid #d1dae6; border-right:none; padding:8px 10px; border-radius:6px 0 0 6px; font-size:12px; color:#8a95a3; font-weight:600; white-space:nowrap; }
+    .ref-prefix + .form-input { border-radius:0 6px 6px 0; }
+    .btn-verify { background:var(--accent); color:#fff; border:none; padding:6px 14px; border-radius:5px; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+    .btn-verify:hover { background:#006bbf; }
+    .btn-verify.verified { background:#1b7735; }
+    .btn-verify.verified:hover { background:#145c29; }
   </style>
 </head>
 <body>
@@ -561,6 +574,14 @@
           d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
       </svg>
       Original Budget
+    </div>
+
+    <div class="nav-item" id="nav-swf-assumption" onclick="navigate('swf-assumption')">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M12 7h.01M9 11h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      SWF Assumption for FIN
     </div>
 
     <div class="sidebar-divider"></div>
@@ -758,6 +779,19 @@ let revisedBudgetRows  = INITIAL_BUDGET_ROWS.map(r => ({ ...r, months: { ...r.mo
 let originalBudgetRows = INITIAL_BUDGET_ROWS.map(r => ({ ...r, months: { ...r.months } }));
 let nextBudgetRowId    = 11;
 
+/* ═══ SWF ASSUMPTION DATA ═══ */
+let swfReference = { healthFluVaccine: '', weddingHamperCondolences: '', fsOfficers: '', decentralisedFund: '' };
+let swfVerified  = {};
+
+const SWF_ROWS = [
+  { key:'swf_100119', cc:'100119', justification:'FS officers',               account:'231401', subAccount:'Q0899', basis:'$31.66*22pax',               calcType:'hc_cc',   param:'100119',     refKey:'fsOfficers',             matchKeyword:'FS' },
+  { key:'swf_100106', cc:'100106', justification:'Wedding, Hamper, Condolences', account:'231401', subAccount:'Q0101', basis:'Based on last FY expenditure', calcType:'direct',                        refKey:'weddingHamperCondolences', matchKeyword:'Wedding' },
+  { key:'swf_100105', cc:'100105', justification:'Health/ Flu Vaccine',        account:'231401', subAccount:'Q0106', basis:'Based on last FY expenditure', calcType:'direct',                        refKey:'healthFluVaccine',         matchKeyword:'Health' },
+  { key:'swf_256997', cc:'256997', justification:'Decentralise SWF',           account:'221401', subAccount:'Q005',  basis:'Decentralise SWF',             calcType:'hc_type', param:'Preventive', refKey:'decentralisedFund',        matchKeyword:'Decentralise' },
+  { key:'swf_256998', cc:'256998', justification:'Decentralise SWF',           account:'221401', subAccount:'Q005',  basis:'Decentralise SWF',             calcType:'hc_type', param:'Revenue',    refKey:'decentralisedFund',        matchKeyword:'Decentralise' },
+  { key:'swf_256999', cc:'256999', justification:'Decentralise SWF',           account:'221401', subAccount:'Q005',  basis:'Decentralise SWF',             calcType:'hc_type', param:'Admin',      refKey:'decentralisedFund',        matchKeyword:'Decentralise' },
+];
+
 /* ═══ STATE ═══ */
 let currentRole = "finance";
 let currentPage = "cost-centre";
@@ -786,6 +820,7 @@ function render() {
   else if (currentPage === "budget-assumption") renderBudgetAssumption(c);
   else if (currentPage === "revised-budget")    renderBudgetTab(c, "revised");
   else if (currentPage === "original-budget")   renderBudgetTab(c, "original");
+  else if (currentPage === "swf-assumption")    renderSwfAssumption(c);
 }
 
 /* ══════════════════════════════
@@ -1513,6 +1548,200 @@ function deleteBudgetRow(type, id) {
   setBudgetRows(type, rows);
   toast("Row removed");
   render();
+}
+
+/* ══════════════════════════════
+   SWF ASSUMPTION FOR FIN PAGE
+══════════════════════════════ */
+function getHcByType() {
+  const totals = { Admin: 0, Revenue: 0, Preventive: 0 };
+  db.filter(r => r.headcount).forEach(r => {
+    const hc = parseInt(headcountValues[r.code]) || 0;
+    if (totals[r.type] !== undefined) totals[r.type] += hc;
+  });
+  return totals;
+}
+
+function calcSwfAmount(row) {
+  const hcByType = getHcByType();
+  const refVal   = parseFloat(swfReference[row.refKey]) || 0;
+  if (row.calcType === 'direct')  return refVal;
+  if (row.calcType === 'hc_cc')   return (parseInt(headcountValues[row.param]) || 0) * refVal;
+  if (row.calcType === 'hc_type') return (hcByType[row.param] || 0) * refVal;
+  return 0;
+}
+
+function renderSwfAssumption(c) {
+  if (currentRole !== 'finance') {
+    c.innerHTML = accessDenied('SWF Assumption for FIN', 'Finance Representatives');
+    return;
+  }
+
+  const hcByType = getHcByType();
+
+  const tableRows = SWF_ROWS.map(row => {
+    const amount     = calcSwfAmount(row);
+    const fmtAmt     = amount > 0 ? fmt(amount) : '<span class="zero-val">—</span>';
+    const isVerified = !!swfVerified[row.key];
+    const ccName     = (db.find(d => d.code === row.cc) || {}).name || '';
+    return `
+      <tr>
+        <td>
+          <div class="cc-code">${esc(row.cc)}</div>
+          <div class="cc-name">${esc(ccName)}</div>
+        </td>
+        <td>${esc(row.justification)}</td>
+        <td>${esc(row.account)}</td>
+        <td>${esc(row.subAccount)}</td>
+        <td>${esc(row.basis)}</td>
+        <td class="td-money" id="swf-rev-${row.key}" style="font-weight:600;color:var(--header)">${fmtAmt}</td>
+        <td class="td-money" id="swf-ori-${row.key}" style="font-weight:600;color:var(--header)">${fmtAmt}</td>
+        <td class="td-center">
+          <button class="btn-verify ${isVerified ? 'verified' : ''}"
+            onclick="verifySwfRow('${row.key}')">
+            ${isVerified ? '✓ Verified' : 'Verify'}
+          </button>
+        </td>
+      </tr>`;
+  }).join('');
+
+  c.innerHTML = `
+    <div class="page-header-row">
+      <div><div class="page-title">SWF Assumption for FIN</div><div class="accent-bar"></div></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value" id="swf-hc-admin">${hcByType.Admin}</div>
+        <div class="stat-label">Admin Headcount</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="swf-hc-preventive">${hcByType.Preventive}</div>
+        <div class="stat-label">Preventive Headcount</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="swf-hc-revenue">${hcByType.Revenue}</div>
+        <div class="stat-label">Revenue Headcount</div>
+      </div>
+    </div>
+
+    <div class="section-divider">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      Past / Reference Data
+    </div>
+    <div class="ref-section">
+      <div class="ref-grid">
+        <div class="ref-card">
+          <label>Health / Flu Vaccine</label>
+          <div class="ref-input-wrap">
+            <span class="ref-prefix">SGD</span>
+            <input type="number" class="form-input" min="0" step="0.01" placeholder="0.00"
+              value="${esc(swfReference.healthFluVaccine)}"
+              oninput="updateSwfRef('healthFluVaccine', this.value)" />
+          </div>
+        </div>
+        <div class="ref-card">
+          <label>Wedding, Hamper, Condolences</label>
+          <div class="ref-input-wrap">
+            <span class="ref-prefix">SGD</span>
+            <input type="number" class="form-input" min="0" step="0.01" placeholder="0.00"
+              value="${esc(swfReference.weddingHamperCondolences)}"
+              oninput="updateSwfRef('weddingHamperCondolences', this.value)" />
+          </div>
+        </div>
+        <div class="ref-card">
+          <label>FS Officers</label>
+          <div class="ref-input-wrap">
+            <span class="ref-prefix">SGD</span>
+            <input type="number" class="form-input" min="0" step="0.01" placeholder="0.00"
+              value="${esc(swfReference.fsOfficers)}"
+              oninput="updateSwfRef('fsOfficers', this.value)" />
+          </div>
+        </div>
+        <div class="ref-card">
+          <label>Decentralised Fund</label>
+          <div class="ref-input-wrap">
+            <span class="ref-prefix">SGD</span>
+            <input type="number" class="form-input" min="0" step="0.01" placeholder="0.00"
+              value="${esc(swfReference.decentralisedFund)}"
+              oninput="updateSwfRef('decentralisedFund', this.value)" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      Budget Lines
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Cost Centre</th>
+            <th>Justification of Expenditure</th>
+            <th>Account</th>
+            <th>Sub Account</th>
+            <th>Basis of Expenditure</th>
+            <th class="th-right" style="min-width:130px">Revised Budget</th>
+            <th class="th-right" style="min-width:130px">Original Budget</th>
+            <th class="th-center" style="width:110px">Action</th>
+          </tr>
+        </thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>`;
+}
+
+function updateSwfRef(field, value) {
+  swfReference[field] = value;
+  SWF_ROWS.forEach(row => {
+    const amount = calcSwfAmount(row);
+    const fmtAmt = amount > 0 ? fmt(amount) : '<span class="zero-val">—</span>';
+    const revCell = document.getElementById('swf-rev-' + row.key);
+    const oriCell = document.getElementById('swf-ori-' + row.key);
+    if (revCell) revCell.innerHTML = fmtAmt;
+    if (oriCell) oriCell.innerHTML = fmtAmt;
+  });
+}
+
+function verifySwfRow(rowKey) {
+  const row = SWF_ROWS.find(r => r.key === rowKey);
+  if (!row) return;
+  const amount = calcSwfAmount(row);
+
+  /* distribute equally across 12 months; last month absorbs rounding */
+  const base = Math.floor((amount / 12) * 100) / 100;
+  const last  = Math.round((amount - base * 11) * 100) / 100;
+  const monthAmounts = MONTHS.map((m, i) => String(i < 11 ? base : last));
+
+  function applyToRows(rows) {
+    const match = rows.find(r =>
+      r.cc === row.cc &&
+      r.justification.toLowerCase().includes(row.matchKeyword.toLowerCase())
+    );
+    if (match) MONTHS.forEach((m, i) => match.months[m] = monthAmounts[i]);
+    return !!match;
+  }
+
+  const revOk = applyToRows(revisedBudgetRows);
+  const oriOk = applyToRows(originalBudgetRows);
+
+  swfVerified[rowKey] = true;
+
+  const btn = document.querySelector(`[onclick="verifySwfRow('${rowKey}')"]`);
+  if (btn) {
+    btn.textContent = '✓ Verified';
+    btn.classList.add('verified');
+  }
+
+  if (revOk && oriOk) toast('Verified — pushed to Revised & Original Budget');
+  else toast('Verified (no matching row found in budget tabs)');
 }
 
 /* ═══ ACCESS DENIED TEMPLATE ═══ */
