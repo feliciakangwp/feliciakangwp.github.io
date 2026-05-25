@@ -788,7 +788,7 @@ let originalBudgetRows = INITIAL_BUDGET_ROWS.map(r => ({ ...r, months: { ...r.mo
 let nextBudgetRowId    = 11;
 
 /* ═══ SWF ASSUMPTION DATA ═══ */
-let swfReference = { perHeadcount: '', healthFluVaccine: '', weddingHamperCondolences: '', fsOfficers: '', decentralisedFund: '' };
+let swfReference = { approvedMMF: '', perHeadcount: '', healthFluVaccine: '', weddingHamperCondolences: '', fsOfficers: '', decentralisedFund: '' };
 let swfVerified  = {};
 
 const SWF_ROWS = [
@@ -1755,9 +1755,9 @@ function updateSwfRef(field, value) {
 
 function refreshSwfReportTotals() {
   const totalBudgeted  = SWF_REPORT_ROWS.reduce((sum, row) => sum + getRevBudgetForRow(row.cc, row.matchKeyword), 0);
-  const totalHc        = getTotalHc();
+  const approvedMMF    = parseFloat(swfReference.approvedMMF) || 0;
   const perHc          = parseFloat(swfReference.perHeadcount) || 0;
-  const totalSwfBudget = totalHc * perHc;
+  const totalSwfBudget = approvedMMF * perHc;
   const crcBudget      = totalSwfBudget - totalBudgeted;
 
   const tbCell  = document.getElementById('swfr-total-budgeted');
@@ -1767,7 +1767,7 @@ function refreshSwfReportTotals() {
 
   if (tbCell)  tbCell.innerHTML  = totalBudgeted  > 0 ? fmt(totalBudgeted)  : '<span class="zero-val">—</span>';
   if (tsbCell) tsbCell.innerHTML = totalSwfBudget > 0 ? fmt(totalSwfBudget) : '<span class="zero-val">—</span>';
-  if (lblCell) lblCell.textContent = `(${totalHc} headcount × SGD ${swfReference.perHeadcount || '0'} per headcount)`;
+  if (lblCell) lblCell.textContent = `(Approved MMF ${swfReference.approvedMMF || '0'} × SGD ${swfReference.perHeadcount || '0'} per headcount)`;
   if (crcCell) {
     if (Math.abs(crcBudget) < 0.005) {
       crcCell.innerHTML = '<span class="zero-val">—</span>';
@@ -1822,10 +1822,10 @@ function renderSwfReport(c) {
   }
 
   const hcByType       = getHcByType();
-  const totalHc        = getTotalHc();
+  const approvedMMF    = parseFloat(swfReference.approvedMMF) || 0;
   const perHc          = parseFloat(swfReference.perHeadcount) || 0;
   const totalBudgeted  = SWF_REPORT_ROWS.reduce((sum, row) => sum + getRevBudgetForRow(row.cc, row.matchKeyword), 0);
-  const totalSwfBudget = totalHc * perHc;
+  const totalSwfBudget = approvedMMF * perHc;
   const crcBudget      = totalSwfBudget - totalBudgeted;
   const crcSign        = crcBudget < 0 ? '-' : '';
 
@@ -1880,6 +1880,14 @@ function renderSwfReport(c) {
     </div>
     <div class="ref-section">
       <div class="ref-grid">
+        <div class="ref-card">
+          <label>Approved MMF</label>
+          <div class="ref-input-wrap">
+            <input type="number" class="form-input" style="border-radius:6px" min="0" step="1" placeholder="0"
+              value="${esc(swfReference.approvedMMF)}"
+              oninput="updateSwfRef('approvedMMF', this.value)" />
+          </div>
+        </div>
         <div class="ref-card">
           <label>Per Headcount</label>
           <div class="ref-input-wrap">
@@ -1959,7 +1967,7 @@ function renderSwfReport(c) {
             <td colspan="5" style="padding:10px 12px;color:var(--header)">
               Total SWF Budget
               <span id="swfr-swf-label" style="font-weight:400;font-size:11px;color:#5570a0;margin-left:6px">
-                (${totalHc} headcount × SGD ${esc(swfReference.perHeadcount || '0')} per headcount)
+                (Approved MMF ${esc(swfReference.approvedMMF || '0')} × SGD ${esc(swfReference.perHeadcount || '0')} per headcount)
               </span>
             </td>
             <td class="td-money" id="swfr-total-swf" style="font-weight:700;color:var(--header);padding:10px 12px">
